@@ -1929,97 +1929,20 @@
                 }
             }
 
-            // Update rates with Yahoo Finance data
+            // REMOVED: Old Yahoo Finance rates update
+            // Rates are now updated via FRED API in dashboardCoordinator.updateRatesData()
             async updateRates() {
-                try {
-                    console.log('🔄 Updating rates data via Yahoo Finance...');
-                    
-                    // Define rate symbols for Yahoo Finance
-                    const rateSymbols = {
-                        '2yr-chart': '2YY=F',     // 2-Year Treasury Futures
-                        '10yr-chart': '^TNX',     // 10-Year Treasury
-                        '30yr-chart': '^TYX',     // 30-Year Treasury
-                        'tbill-chart': '^IRX'     // 3-Month Treasury
-                    };
-
-                    // Fetch data for each rate
-                    for (const [chartId, symbol] of Object.entries(rateSymbols)) {
-                        try {
-                            // Get current quote
-                            const quote = await window.yahooFinance.getQuote(symbol);
-                            
-                            // Get 1 year of historical data for calculations
-                            const historical = await window.yahooFinance.getHistoricalData(symbol, '1y', '1d', true);
-                            
-                            // Get extended returns
-                            const extendedReturns = await window.yahooFinance.getExtendedReturns(symbol);
-                            
-                            if (quote && quote.price) {
-                                const rateData = {
-                                    price: quote.price,
-                                    changePercent: quote.changePercent,
-                                    returns: historical?.returns || {},
-                                    extendedReturns: extendedReturns,
-                                    historicalData: historical || {}
-                                };
-                                
-                                console.log(`✅ Updated ${symbol}: ${quote.price}%`);
-                                
-                                // Update the rate card
-                                this.updateRateCard(chartId, symbol, rateData);
-                                
-                                // Small delay between requests
-                                await new Promise(resolve => setTimeout(resolve, 200));
-                            }
-                            
-                        } catch (error) {
-                            console.error(`❌ Error fetching ${symbol}:`, error);
-                        }
-                    }
-                    
-                    // Update 2s10s spread calculation using Yahoo Finance data
-                    setTimeout(() => this.calculate2s10sSpreadFromYahoo(), 1000);
-                    
-                    console.log('✅ Rates update complete');
-                    
-                } catch (error) {
-                    console.error('Error updating rates:', error);
-                }
+                console.log('📊 Rates data is now updated via FRED API in dashboardCoordinator');
+                // This method is kept as a stub for backward compatibility
+                // Yahoo Finance symbols removed - using FRED data sources:
+                // 2yr: DGS2, 10yr: DGS10, 30yr: DGS30, tbill: DTB3
             }
 
-            // Calculate 2s10s spread using Yahoo Finance data
+            // REMOVED: Old Yahoo Finance 2s10s spread calculation
+            // Spread is now calculated from FRED data in dashboardCoordinator
             async calculate2s10sSpreadFromYahoo() {
-                try {
-                    const twoYearQuote = await window.yahooFinance.getQuote('2YY=F');
-                    const tenYearQuote = await window.yahooFinance.getQuote('^TNX');
-                    
-                    if (twoYearQuote && tenYearQuote && twoYearQuote.price && tenYearQuote.price) {
-                        const spread = (tenYearQuote.price - twoYearQuote.price) * 100; // Convert to basis points
-                        const spreadChange = ((tenYearQuote.changePercent || 0) - (twoYearQuote.changePercent || 0)) * 100;
-                        
-                        // Find and update the spread card
-                        const spreadCard = this.findCardByTitle('2s10s Spread');
-                        if (spreadCard) {
-                            const valueElement = spreadCard.querySelector('.card-value');
-                            const changeElement = spreadCard.querySelector('.card-change');
-                            
-                            if (valueElement) {
-                                valueElement.textContent = spread.toFixed(0) + ' bps';
-                            }
-                            
-                            if (changeElement) {
-                                const isPositive = spreadChange >= 0;
-                                changeElement.className = 'card-change ' + (isPositive ? 'positive' : 'negative');
-                                const arrow = isPositive ? '▲' : '▼';
-                                changeElement.innerHTML = `1D: ${arrow} ${Math.abs(spreadChange).toFixed(0)} bps`;
-                            }
-                        }
-                        
-                        console.log(`📊 2s10s Spread: ${spread.toFixed(0)} bps (${spreadChange >= 0 ? '+' : ''}${spreadChange.toFixed(0)} bps)`);
-                    }
-                } catch (error) {
-                    console.error('Error calculating 2s10s spread:', error);
-                }
+                console.log('📊 2s10s spread is now calculated from FRED data in dashboardCoordinator');
+                // This method is kept as a stub for backward compatibility
             }
 
             // Calculate and update 2s10s spread (FIXED)

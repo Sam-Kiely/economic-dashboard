@@ -496,45 +496,8 @@ class DashboardCoordinator {
         }
     }
 
-    updateRateCard(key, quote, historical) {
-        const card = document.querySelector(`#${key}-chart`)?.closest('.card');
-        if (!card || !quote) return;
-        
-        const valueElement = card.querySelector('.card-value');
-        if (valueElement) {
-            valueElement.textContent = quote.price.toFixed(2) + '%';
-        }
-        
-        const changeElement = card.querySelector('.card-change');
-        if (changeElement) {
-            const bpsChange = Math.abs(quote.changePercent * 10).toFixed(0);
-            const changeType = quote.changePercent >= 0 ? 'negative' : 'positive';
-            changeElement.className = 'card-change ' + changeType;
-            const arrow = quote.changePercent >= 0 ? '▲' : '▼';
-            changeElement.innerHTML = `1D: ${arrow} ${bpsChange} bps`;
-        }
-        
-        // Update period returns for rates
-        if (historical && historical.returns) {
-            const periodReturns = card.querySelector('.period-returns');
-            if (periodReturns) {
-                const periods = ['1W', '1M', 'YTD', '1Y', '3Y', '5Y'];
-                periods.forEach((period, index) => {
-                    const returnElement = periodReturns.querySelectorAll('.return-value')[index];
-                    if (returnElement && historical.returns[period] !== undefined) {
-                        const value = historical.returns[period];
-                        const bps = Math.abs(value * 100).toFixed(0);
-                        returnElement.textContent = (value >= 0 ? '+' : '-') + bps + ' bps';
-                        returnElement.className = 'return-value ' + (value >= 0 ? 'negative' : 'positive');
-                    }
-                });
-            }
-        }
-        
-        if (historical) {
-            this.updateChart(`${key}-chart`, historical);
-        }
-    }
+    // REMOVED: Old Yahoo Finance rate card update method
+    // Rates are now updated via FRED API using dataUpdater.updateRateChartWithFredData()
 
     updatePeriodReturns(card, returns) {
         let container = card.querySelector('.period-returns');
