@@ -133,35 +133,39 @@ class DashboardCoordinator {
     }
 
     initializeAllCharts() {
-        // Economic charts
-        const economicCharts = ['corecpi', 'coreppi', 'corepce', 'gdp', 'trade', 
-                                'unemployment', 'jobless', 'retail', 'durablegoods',
-                                'newhomes', 'existinghomes', 'sentiment'];
-        
-        economicCharts.forEach(chartId => {
-            const canvas = document.getElementById(`${chartId}-chart`);
-            if (canvas && !canvas.chart) {
-                this.initializeChart(canvas, '#667eea');
-            }
-        });
-        
-        // Market charts
-        const marketCharts = ['sp500', 'dow', 'nasdaq', 'vix', 'gold', 'oil', 'dxy', 'bitcoin'];
-        marketCharts.forEach(chartId => {
-            const canvas = document.getElementById(`${chartId}-chart`);
-            if (canvas && !canvas.chart) {
-                this.initializeChart(canvas, '#2196F3');
-            }
-        });
-        
-        // Rate charts
-        const rateCharts = ['sofr', '2yr', '5yr', '10yr', '30yr', 'fedfunds', 
-                           'tbill', 'highyield', 'spread'];
-        rateCharts.forEach(chartId => {
-            const canvas = document.getElementById(`${chartId}-chart`);
-            if (canvas && !canvas.chart) {
-                this.initializeChart(canvas, '#4CAF50');
-            }
+        console.log('Initializing all charts concurrently...');
+        const startTime = Date.now();
+
+        // Define chart configurations
+        const chartConfigs = [
+            // Economic charts
+            ...['corecpi', 'coreppi', 'corepce', 'gdp', 'trade',
+                'unemployment', 'jobless', 'retail', 'durablegoods',
+                'newhomes', 'existinghomes', 'sentiment'].map(id => ({ id: `${id}-chart`, color: '#667eea' })),
+
+            // Market charts
+            ...['sp500', 'dow', 'nasdaq', 'vix', 'gold', 'oil', 'dxy', 'bitcoin'].map(id => ({ id: `${id}-chart`, color: '#2196F3' })),
+
+            // Rate charts
+            ...['sofr', '2yr', '5yr', '10yr', '30yr', 'fedfunds',
+                'tbill', 'highyield', 'spread'].map(id => ({ id: `${id}-chart`, color: '#4CAF50' }))
+        ];
+
+        // Initialize all charts in parallel using requestAnimationFrame for better performance
+        let initialized = 0;
+        chartConfigs.forEach((config, index) => {
+            requestAnimationFrame(() => {
+                const canvas = document.getElementById(config.id);
+                if (canvas && !canvas.chart) {
+                    this.initializeChart(canvas, config.color);
+                    initialized++;
+                }
+
+                // Log completion when all charts are initialized
+                if (index === chartConfigs.length - 1) {
+                    console.log(`Initialized ${initialized} charts in ${Date.now() - startTime}ms`);
+                }
+            });
         });
     }
 
@@ -283,26 +287,31 @@ class DashboardCoordinator {
 
     async performInitialUpdate() {
         console.log('🚀 Performing initial data load...');
-        
+
         // Show loading state
         if (window.loadingManager) {
             window.loadingManager.showGlobalLoading('Loading dashboard data...');
         }
-        
+
         try {
-            // Update in parallel with error handling
-            const updates = [
+            // Update all data in parallel for faster loading
+            const startTime = Date.now();
+
+            // Execute all updates concurrently
+            await Promise.all([
                 this.updateEconomicData(),
                 this.updateMarketData(),
                 this.updateRatesData(),
                 this.updateBankingData(),
                 this.updateCalendar()
-            ];
-            
-            await Promise.allSettled(updates);
-            
-            console.log('✅ Initial data load complete');
-            
+            ]);
+
+            const loadTime = Date.now() - startTime;
+            console.log(`✅ Initial data load complete in ${loadTime}ms`);
+
+        } catch (error) {
+            console.error('❌ Error during initial data load:', error);
+            // Continue even if some data fails to load
         } finally {
             // Hide loading state
             if (window.loadingManager) {
@@ -330,49 +339,103 @@ class DashboardCoordinator {
 
     async updateMarketData() {
         if (!this.services.yahooFinance) return;
-        
+
         // Update market indices
         const symbols = ['SPY', 'DIA', 'QQQ', '^VIX', 'GC=F', 'CL=F', 'DX-Y.NYB', 'BTC-USD'];
-        
-        for (const symbol of symbols) {
+
+        // Fetch all market data in parallel
+        const marketPromises = symbols.map(async (symbol) => {
             try {
-                const quote = await this.services.yahooFinance.getQuote(symbol);
-                const historical = await this.services.yahooFinance.getHistoricalData(symbol, '1y', '1d', true);
-                const extendedReturns = await this.services.yahooFinance.getExtendedReturns(symbol);
-                
+                // Fetch quote, historical, and extended returns in parallel
+                const [quote, historical, extendedReturns] = await Promise.all([
+                    this.services.yahooFinance.getQuote(symbol),
+                    this.services.yahooFinance.getHistoricalData(symbol, '1y', '1d', true),
+                    this.services.yahooFinance.getExtendedReturns(symbol)
+                ]);
+
                 // Update the appropriate card
                 this.updateMarketCard(symbol, quote, historical, extendedReturns);
-                
-                // Small delay between requests
-                await new Promise(resolve => setTimeout(resolve, 200));
+
+                return { symbol, success: true };
             } catch (error) {
                 console.error(`Error updating ${symbol}:`, error);
+                return { symbol, success: false, error };
             }
-        }
+        });
+
+        // Wait for all updates to complete
+        const results = await Promise.all(marketPromises);
+
+        const successCount = results.filter(r => r.success).length;
+        console.log(`Market data updated: ${successCount}/${symbols.length} symbols`);
     }
 
     async updateRatesData() {
-        if (!this.services.yahooFinance) return;
-        
-        const rateSymbols = {
-            '2yr': '2YY=F',
-            '10yr': '^TNX',
-            '30yr': '^TYX',
-            'tbill': '^IRX'
+        if (!this.services.apiService) return;
+
+        // Rates tab uses FRED API exclusively
+        const fredRateSeries = {
+            '2yr': 'DGS2',           // 2-Year Treasury
+            '5yr': 'DGS5',           // 5-Year Treasury
+            '10yr': 'DGS10',         // 10-Year Treasury
+            '30yr': 'DGS30',         // 30-Year Treasury
+            'sofr': 'SOFR30DAYAVG',  // 30-Day Average SOFR
+            'fedfunds': 'DFEDTARU',  // Fed Funds Target Range Upper
+            'tbill': 'DTB3',         // 3-Month Treasury Bill
+            'highyield': 'BAMLH0A0HYM2' // High Yield Index
         };
-        
-        for (const [key, symbol] of Object.entries(rateSymbols)) {
+
+        // Store 2yr and 10yr data for spread calculation
+        let treasury2Data = null;
+        let treasury10Data = null;
+
+        // Fetch all rate data from FRED in parallel
+        const ratePromises = Object.entries(fredRateSeries).map(async ([key, seriesId]) => {
             try {
-                const quote = await this.services.yahooFinance.getQuote(symbol);
-                const historical = await this.services.yahooFinance.getHistoricalData(symbol, '1y', '1d', true);
-                
-                this.updateRateCard(key, quote, historical);
-                
-                await new Promise(resolve => setTimeout(resolve, 200));
+                // Fetch FRED data with appropriate time ranges
+                const isDaily = ['2yr', '5yr', '10yr', '30yr', 'sofr', 'highyield'].includes(key);
+                const limit = isDaily ? 365 : 52; // 365 days or 52 weeks
+                const frequency = isDaily ? 'd' : (key === 'tbill' ? 'w' : 'd');
+
+                const data = await this.services.apiService.getFREDSeries(seriesId, limit, frequency);
+
+                if (data && data.values && data.values.length > 0) {
+                    // Store 2yr and 10yr data for spread calculation
+                    if (key === '2yr') treasury2Data = data;
+                    if (key === '10yr') treasury10Data = data;
+
+                    // Update the rate card with FRED data
+                    if (this.services.dataUpdater) {
+                        this.services.dataUpdater.updateRateChartWithFredData(`${key}-chart`, data.values, data.dates);
+                    }
+                    return { key, success: true, data };
+                }
+
+                return { key, success: false, error: 'No data received' };
             } catch (error) {
-                console.error(`Error updating ${symbol}:`, error);
+                console.error(`Error updating FRED series ${seriesId}:`, error);
+                return { key, success: false, error };
+            }
+        });
+
+        // Wait for all updates to complete
+        const results = await Promise.all(ratePromises);
+
+        // Calculate 2s10s spread if we have both treasury data
+        if (treasury2Data && treasury10Data && this.services.apiService.calculate2s10sHistorical) {
+            try {
+                const spreadData = this.services.apiService.calculate2s10sHistorical(treasury2Data, treasury10Data);
+                if (spreadData && this.services.dataUpdater) {
+                    this.services.dataUpdater.updateRateChartWithFredData('spread-chart',
+                        spreadData.values, spreadData.dates);
+                }
+            } catch (error) {
+                console.error('Error calculating 2s10s spread:', error);
             }
         }
+
+        const successCount = results.filter(r => r.success).length;
+        console.log(`Rates data updated from FRED: ${successCount}/${Object.keys(fredRateSeries).length} rates`);
     }
 
     async updateBankingData() {

@@ -384,16 +384,28 @@ class DataUpdater {
 
         console.log(`Updating card for ${cardId}`, data);
 
-        // Update observation date
+        // Update observation date - skip for rate cards (daily market data doesn't need "as of" dates)
+        const isRateCard = ['2yr', '10yr', '30yr', '5yr', 'sofr', 'fedfunds', 'tbill', 'highyield', 'spread', 'mortgage', 'prime'].some(rate => cardId.includes(rate));
         const dateElement = card.querySelector('.card-date');
-        if (dateElement && data.observationDate) {
-            const date = new Date(data.observationDate);
-            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-            dateElement.textContent = `As of ${months[date.getMonth()]} ${date.getFullYear()}`;
+
+        if (dateElement && !isRateCard) {
+            // If we have formatted dates array, use the last one
+            if (data.dates && data.dates.length > 0) {
+                const lastChartDate = data.dates[data.dates.length - 1];
+                // The dates are already formatted like "Aug '24" or "Q3'24"
+                dateElement.textContent = `As of ${lastChartDate}`;
+            } else if (data.observationDate) {
+                // Fallback to observation date if no dates array
+                const date = new Date(data.observationDate);
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                dateElement.textContent = `As of ${months[date.getMonth()]} ${date.getFullYear()}`;
+            }
+        } else if (dateElement && isRateCard) {
+            // Clear any existing date text for rate cards
+            dateElement.textContent = '';
         }
 
         // Update next release date (skip for rate cards)
-        const isRateCard = ['2yr', '10yr', '30yr', '5yr', 'sofr', 'fedfunds', 'tbill', 'highyield', 'spread', 'mortgage', 'prime'].some(rate => cardId.includes(rate));
         
         const nextReleaseElement = card.querySelector('.next-release');
         if (data.seriesId && !isRateCard) {

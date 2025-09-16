@@ -24,8 +24,8 @@
         <div id="economic" class="tab-content">
             <!-- Existing economic content preserved -->
             <div class="insights-banner">
-                <h2>📊 Economic Summary</h2>
-                <p>Inflation remains sticky above target while labor market shows resilience. Fed likely to maintain cautious stance with gradual rate adjustments through 2025.</p>
+                <h2>📊 Economic Overview</h2>
+                <p>Federal Reserve Economic Data (FRED) indicators tracking inflation, growth, employment, and consumer activity. Monitor key metrics that influence monetary policy decisions.</p>
             </div>
 
             <h2 class="section-header">Key Economic Indicators</h2>
@@ -42,7 +42,6 @@
                     <span class="card-change neutral">
                         <span>—</span> Loading
                     </span>
-                    <p class="metric-summary">Awaiting data release for market analysis</p>
                     <div class="next-release"></div>
                     <div class="chart-container">
                         <canvas id="corecpi-chart"></canvas>
@@ -60,7 +59,6 @@
                     <span class="card-change neutral">
                         <span>—</span> Loading
                     </span>
-                    <p class="metric-summary">Awaiting data release for market analysis</p>
                     <div class="next-release"></div>
                     <div class="chart-container">
                         <canvas id="coreppi-chart"></canvas>
@@ -78,7 +76,6 @@
                     <span class="card-change neutral">
                         <span>—</span> Loading
                     </span>
-                    <p class="metric-summary">Awaiting data release for market analysis</p>
                     <div class="next-release"></div>
                     <div class="chart-container">
                         <canvas id="corepce-chart"></canvas>
@@ -96,7 +93,6 @@
                     <span class="card-change neutral">
                         <span>—</span> Loading
                     </span>
-                    <p class="metric-summary">Awaiting data release for market analysis</p>
                     <div class="next-release"></div>
                     <div class="chart-container">
                         <canvas id="gdp-chart"></canvas>
@@ -114,7 +110,6 @@
                     <span class="card-change neutral">
                         <span>—</span> Loading
                     </span>
-                    <p class="metric-summary">Awaiting data release for market analysis</p>
                     <div class="next-release"></div>
                     <div class="chart-container">
                         <canvas id="trade-chart"></canvas>
@@ -132,7 +127,6 @@
                     <span class="card-change neutral">
                         <span>—</span> Loading
                     </span>
-                    <p class="metric-summary">Awaiting data release for market analysis</p>
                     <div class="next-release"></div>
                     <div class="chart-container">
                         <canvas id="unemployment-chart"></canvas>
@@ -150,7 +144,6 @@
                     <span class="card-change neutral">
                         <span>—</span> Loading
                     </span>
-                    <p class="metric-summary">Awaiting data release for market analysis</p>
                     <div class="next-release"></div>
                     <div class="chart-container">
                         <canvas id="jobless-chart"></canvas>
@@ -168,7 +161,6 @@
                     <span class="card-change neutral">
                         <span>—</span> Loading
                     </span>
-                    <p class="metric-summary">Awaiting data release for market analysis</p>
                     <div class="next-release"></div>
                     <div class="chart-container">
                         <canvas id="retail-chart"></canvas>
@@ -186,7 +178,6 @@
                     <span class="card-change neutral">
                         <span>—</span> Loading
                     </span>
-                    <p class="metric-summary">Awaiting data release for market analysis</p>
                     <div class="next-release"></div>
                     <div class="chart-container">
                         <canvas id="durablegoods-chart"></canvas>
@@ -204,7 +195,6 @@
                     <span class="card-change neutral">
                         <span>—</span> Loading
                     </span>
-                    <p class="metric-summary">Awaiting data release for market analysis</p>
                     <div class="next-release"></div>
                     <div class="chart-container">
                         <canvas id="newhomes-chart"></canvas>
@@ -222,7 +212,6 @@
                     <span class="card-change neutral">
                         <span>—</span> Loading
                     </span>
-                    <p class="metric-summary">Awaiting data release for market analysis</p>
                     <div class="next-release"></div>
                     <div class="chart-container">
                         <canvas id="existinghomes-chart"></canvas>
@@ -240,7 +229,6 @@
                     <span class="card-change neutral">
                         <span>—</span> Loading
                     </span>
-                    <p class="metric-summary">Awaiting data release for market analysis</p>
                     <div class="next-release"></div>
                     <div class="chart-container">
                         <canvas id="sentiment-chart"></canvas>
@@ -265,8 +253,8 @@
         <div id="markets" class="tab-content" style="display: none;">
             <!-- Existing markets content preserved -->
             <div class="insights-banner">
-                <h2>📈 Market Summary</h2>
-                <p id="market-summary-text">Tech leads equity gains while energy lags. Commodities mixed on growth concerns.</p>
+                <h2>📈 Market Overview</h2>
+                <p id="market-summary-text">Real-time equity indices, commodities, and cryptocurrency prices. Track major market movements across asset classes during trading hours.</p>
             </div>
 
             <h2 class="section-header">Equity Markets</h2>
@@ -608,8 +596,8 @@
         <div id="rates" class="tab-content" style="display: none;">
             <!-- Existing rates content preserved -->
             <div class="insights-banner">
-                <h2>📉 Rates Summary</h2>
-                <p>Yield curve inverted as Fed maintains restrictive policy. Markets price in gradual easing through 2025.</p>
+                <h2>📉 Rates Overview</h2>
+                <p>Treasury yields, federal funds rate, and credit spreads from Federal Reserve data sources. Monitor interest rate trends and yield curve dynamics.</p>
             </div>
 
             <h2 class="section-header">Interest Rates</h2>
@@ -1924,8 +1912,8 @@
                         }
                     }
                     
-                    // Update market summary
-                    this.updateMarketSummary();
+                    // Update market summary - DISABLED: Now using static descriptive text
+                    // this.updateMarketSummary();
                     
                     // Update last updated time
                     this.updateLastUpdatedTime();

@@ -378,7 +378,7 @@ class APIService {
                         changeLabel: 'MoM',
                         historicalData: yoyValues.slice(-12),
                         dates: yoyDates.slice(-12).map(d => this.formatDate(d, false, false, 'coreCPI')),
-                        observationDate: coreCpiData.dates[coreCpiData.dates.length - 1],
+                        observationDate: yoyDates[yoyDates.length - 1],  // Use YoY date, not raw date
                         seriesId: 'coreCPI'
                     };
                     console.log('Updated Core CPI YoY:', currentYoY);
@@ -412,7 +412,7 @@ class APIService {
                         changeLabel: 'MoM',
                         historicalData: yoyValues.slice(-12),
                         dates: yoyDates.slice(-12).map(d => this.formatDate(d, false, false, 'corePPI')),
-                        observationDate: corePpiData.dates[corePpiData.dates.length - 1],
+                        observationDate: yoyDates[yoyDates.length - 1],  // Use YoY date, not raw date
                         seriesId: 'corePPI'
                     };
                     console.log('Updated Core PPI YoY:', currentYoY);
@@ -446,7 +446,7 @@ class APIService {
                         changeLabel: 'MoM',
                         historicalData: yoyValues.slice(-12),
                         dates: yoyDates.slice(-12).map(d => this.formatDate(d, false, false, 'corePCE')),
-                        observationDate: corePceData.dates[corePceData.dates.length - 1],
+                        observationDate: yoyDates[yoyDates.length - 1],  // Use YoY date, not raw date
                         seriesId: 'corePCE'
                     };
                     console.log('Updated Core PCE YoY:', currentYoY);
@@ -592,7 +592,7 @@ class APIService {
                         changeLabel: 'MoM',
                         historicalData: momChanges.slice(-12),
                         dates: momDates.slice(-12).map(d => this.formatDate(d)),
-                        observationDate: durableGoodsData.dates[durableGoodsData.dates.length - 1],
+                        observationDate: momDates[momDates.length - 1],  // Use MoM date, not raw date
                         seriesId: 'durableGoods'
                     };
                     console.log('Updated Durable Goods MoM:', currentMoM);

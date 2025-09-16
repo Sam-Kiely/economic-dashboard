@@ -267,21 +267,24 @@ class EconomicInsightsService {
         return [0, 3, 6, 9].includes(month);
     }
 
-    // Update all summaries
+    // Update all summaries - DISABLED: Now using static descriptive text instead of dynamic analysis
     updateAllSummaries(data) {
-        // Update main banner summaries
-        const economicSummary = this.generateEconomicSummary(data);
-        const marketSummary = this.generateMarketSummary(data);
-        const ratesSummary = this.generateRatesSummary(data);
-        
-        // Update banner text
-        const economicBanner = document.querySelector('#economic .insights-banner p');
-        const marketBanner = document.querySelector('#markets .insights-banner p');
-        const ratesBanner = document.querySelector('#rates .insights-banner p');
-        
-        if (economicBanner) economicBanner.textContent = economicSummary;
-        if (marketBanner) marketBanner.textContent = marketSummary;
-        if (ratesBanner) ratesBanner.textContent = ratesSummary;
+        // Static descriptive summaries are now used instead of dynamic analysis
+        // The banner text is set in HTML and no longer updated by JavaScript
+
+        // // Update main banner summaries
+        // const economicSummary = this.generateEconomicSummary(data);
+        // const marketSummary = this.generateMarketSummary(data);
+        // const ratesSummary = this.generateRatesSummary(data);
+        //
+        // // Update banner text
+        // const economicBanner = document.querySelector('#economic .insights-banner p');
+        // const marketBanner = document.querySelector('#markets .insights-banner p');
+        // const ratesBanner = document.querySelector('#rates .insights-banner p');
+        //
+        // if (economicBanner) economicBanner.textContent = economicSummary;
+        // if (marketBanner) marketBanner.textContent = marketSummary;
+        // if (ratesBanner) ratesBanner.textContent = ratesSummary;
         
         // Update individual metric summaries
         this.updateMetricCards(data);
@@ -294,21 +297,22 @@ class EconomicInsightsService {
             'newHomeSales', 'existingHomeSales', 'consumerSentiment'
         ];
         
-        metrics.forEach(metricId => {
-            const card = document.querySelector(`#${metricId}-card`);
-            if (card && data[metricId]) {
-                const summaryElement = card.querySelector('.metric-summary');
-                if (summaryElement) {
-                    const summary = this.generateMetricSummary(
-                        metricId,
-                        data[metricId].value,
-                        data[metricId].previousValue,
-                        data[metricId].consensus
-                    );
-                    summaryElement.textContent = summary;
-                }
-            }
-        });
+        // Metric summaries removed - no longer displaying analysis text
+        // metrics.forEach(metricId => {
+        //     const card = document.querySelector(`#${metricId}-card`);
+        //     if (card && data[metricId]) {
+        //         const summaryElement = card.querySelector('.metric-summary');
+        //         if (summaryElement) {
+        //             const summary = this.generateMetricSummary(
+        //                 metricId,
+        //                 data[metricId].value,
+        //                 data[metricId].previousValue,
+        //                 data[metricId].consensus
+        //             );
+        //             summaryElement.textContent = summary;
+        //         }
+        //     }
+        // });
     }
 }
 
