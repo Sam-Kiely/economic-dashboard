@@ -9,14 +9,19 @@ class APIService {
         this.useProxy = true;
     }
 
-    // Generic fetch with caching and CORS handling - WITH RETRY LOGIC AND FALLBACK PROXY
+    // Generic fetch with caching and CORS handling - WITH CORPORATE ENVIRONMENT SUPPORT
     async fetchWithCache(url, cacheKey, cacheDuration = 300000, forceRefresh = false) {
         const now = Date.now();
-        
+
+        // Use longer cache duration in corporate environments
+        if (window.networkManager && window.networkManager.isCorporateNetwork) {
+            cacheDuration = window.networkManager.getCacheDuration(cacheDuration);
+        }
+
         // Check cache (unless force refresh)
-        if (!forceRefresh && this.cache[cacheKey] && this.lastFetch[cacheKey] && 
+        if (!forceRefresh && this.cache[cacheKey] && this.lastFetch[cacheKey] &&
             (now - this.lastFetch[cacheKey] < cacheDuration)) {
-            console.log(`Using cached data for ${cacheKey}`);
+            console.log(`Using cached data for ${cacheKey} (corporate cache: ${cacheDuration}ms)`);
             return this.cache[cacheKey];
         }
 

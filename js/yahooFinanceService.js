@@ -59,6 +59,19 @@ class YahooFinanceService {
             return this.cache[cacheKey];
         }
 
+        // Check if we should use fallback data in corporate environment
+        if (window.networkManager && window.networkManager.shouldUseFallback('yahoo')) {
+            console.log(`🎭 Using fallback data for ${symbol} (corporate network)`);
+            if (window.corporateFallbackData) {
+                const fallbackQuote = window.corporateFallbackData.getQuote(symbol);
+                if (fallbackQuote) {
+                    this.cache[cacheKey] = fallbackQuote;
+                    this.lastFetch[cacheKey] = now;
+                    return fallbackQuote;
+                }
+            }
+        }
+
         // Show loading state
         if (window.loadingManager) {
             window.loadingManager.showServiceLoading('yahooFinance', `Fetching ${symbol} data...`);
@@ -67,7 +80,7 @@ class YahooFinanceService {
         try {
             const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
             const proxyUrl = this.corsProxy + encodeURIComponent(url);
-            
+
             console.log(`Fetching Yahoo Finance data for ${symbol}`);
             const response = await fetch(proxyUrl);
             
