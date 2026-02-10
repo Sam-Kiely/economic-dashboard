@@ -1,13 +1,10 @@
-// API Service Layer with CORS proxy - WITH DATE ALIGNMENT FIXES
+// API Service Layer - VERCEL API ONLY VERSION
 class APIService {
     constructor() {
         this.cache = {};
         this.lastFetch = {};
-        // Use Vercel API routes instead of CORS proxy
-        this.useVercelAPI = true;
-        // Fallback CORS proxy (not used when Vercel API is enabled)
-        this.corsProxy = 'https://corsproxy.io/?';
-        this.useProxy = false;
+        // ALWAYS use Vercel API - no fallback
+        console.log('APIService: Initialized with Vercel API endpoints only');
     }
 
     // Helper method to filter observations by frequency
@@ -57,8 +54,9 @@ class APIService {
         return filtered;
     }
 
-    // Generic fetch with caching and CORS handling - WITH CORPORATE ENVIRONMENT SUPPORT
+    // DEPRECATED - DO NOT USE
     async fetchWithCache(url, cacheKey, cacheDuration = 300000, forceRefresh = false) {
+        throw new Error('fetchWithCache is deprecated - use Vercel API methods');
         const now = Date.now();
 
         // Use longer cache duration in corporate environments
@@ -161,10 +159,10 @@ class APIService {
         throw lastError;
     }
 
-    // FRED API Methods
+    // FRED API Methods - VERCEL ONLY
     async getFREDSeries(seriesId, limit = 13, frequency = null, forceRefresh = false) {
-        // Use Vercel API route for server-side requests
-        if (this.useVercelAPI) {
+        // ALWAYS use Vercel API route - no conditions
+        {
             try {
                 // Calculate date range for limit
                 const endDate = new Date().toISOString().split('T')[0];
@@ -227,8 +225,7 @@ class APIService {
             return null;
         }
 
-        // Fallback to CORS proxy method (should not be reached with useVercelAPI = true)
-        console.error('CORS proxy method is disabled - use Vercel API routes');
+        // No fallback - Vercel API only
         return null;
     }
 

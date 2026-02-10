@@ -1,11 +1,11 @@
-// Yahoo Finance Service - Free market data without API limits
+// Yahoo Finance Service - VERCEL API ONLY VERSION
 class YahooFinanceService {
     constructor() {
         this.cache = {};
         this.lastFetch = {};
-        this.useVercelAPI = true; // Use Vercel API routes
-        this.corsProxy = 'https://corsproxy.io/?'; // Fallback (not used with Vercel API)
+        // ALWAYS use Vercel API - no fallback
         this.cacheDuration = 60000; // 1 minute cache for quotes
+        console.log('YahooFinanceService: Initialized with Vercel API endpoints only');
 
         // Symbol mappings
         this.symbols = {
@@ -81,23 +81,23 @@ class YahooFinanceService {
         try {
             let data;
 
-            // Use Vercel API route
-            if (this.useVercelAPI) {
-                try {
-                    const vercelUrl = `/api/yahoo?symbol=${symbol}`;
-                    console.log(`Fetching Yahoo Finance data via Vercel API: ${symbol}`);
+            // ALWAYS use Vercel API route
+            try {
+                const vercelUrl = `/api/yahoo?symbol=${symbol}`;
+                console.log(`Fetching Yahoo Finance data via Vercel API: ${symbol}`);
 
-                    const vercelResponse = await fetch(vercelUrl);
-                    if (vercelResponse.ok) {
-                        data = await vercelResponse.json();
-                    } else {
-                        throw new Error(`Vercel API failed: ${vercelResponse.status}`);
-                    }
-                } catch (vercelError) {
-                    console.error(`Vercel API error for ${symbol}:`, vercelError.message);
-                    throw vercelError;
+                const vercelResponse = await fetch(vercelUrl);
+                if (vercelResponse.ok) {
+                    data = await vercelResponse.json();
+                } else {
+                    throw new Error(`Vercel API failed: ${vercelResponse.status}`);
                 }
-            } else {
+            } catch (vercelError) {
+                console.error(`Vercel API error for ${symbol}:`, vercelError.message);
+                throw vercelError;
+            }
+            // No else - Vercel only
+            if (false) {
                 // Fallback to CORS proxy (should not be used)
                 const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
                 const proxyUrl = this.corsProxy + encodeURIComponent(url);
