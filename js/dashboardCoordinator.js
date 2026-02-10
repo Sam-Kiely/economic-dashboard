@@ -322,19 +322,26 @@ class DashboardCoordinator {
 
     async updateEconomicData() {
         if (!this.services.apiService) return;
-        
+
         const data = await this.services.apiService.updateAllData();
-        
+
         if (data && this.services.dataUpdater) {
             Object.entries(data).forEach(([key, value]) => {
                 this.services.dataUpdater.updateCard(key, value);
             });
         }
-        
+
         // Update insights
         if (this.services.economicInsights && data) {
             this.services.economicInsights.updateAllSummaries(data);
         }
+
+        // Update rates summary after economic data loads (includes rates data)
+        setTimeout(() => {
+            if (typeof updateRatesSummary === 'function') {
+                updateRatesSummary();
+            }
+        }, 1000);
     }
 
     async updateMarketData() {

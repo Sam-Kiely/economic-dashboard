@@ -1918,6 +1918,9 @@
                     
                     // Update market summary - DISABLED: Now using static descriptive text
                     // this.updateMarketSummary();
+
+                    // Update rates summary when markets data affects sentiment
+                    this.updateRatesSummary();
                     
                     // Update last updated time
                     this.updateLastUpdatedTime();
@@ -1979,27 +1982,61 @@
                 }
             }
 
-            // Update rates summary text (FIXED)
+            // Update rates summary text with comprehensive market analysis
             updateRatesSummary() {
                 const summaryElement = document.querySelector('#rates .insights-banner p');
                 if (summaryElement) {
-                    // Get current spread value
+                    // Get current rates data
+                    const fedFundsCard = this.findCardByTitle('Fed Funds Target');
+                    const tenYearCard = this.findCardByTitle('10-Year Treasury');
+                    const twoYearCard = this.findCardByTitle('2-Year Treasury');
                     const spreadCard = this.findCardByTitle('2s10s Spread');
-                    let spreadValue = 0;
+
+                    let fedFunds = 0, tenYear = 0, twoYear = 0, spreadValue = 0;
+
+                    if (fedFundsCard) {
+                        const valueText = fedFundsCard.querySelector('.card-value')?.textContent || '0';
+                        fedFunds = parseFloat(valueText);
+                    }
+                    if (tenYearCard) {
+                        const valueText = tenYearCard.querySelector('.card-value')?.textContent || '0';
+                        tenYear = parseFloat(valueText);
+                    }
+                    if (twoYearCard) {
+                        const valueText = twoYearCard.querySelector('.card-value')?.textContent || '0';
+                        twoYear = parseFloat(valueText);
+                    }
                     if (spreadCard) {
                         const valueText = spreadCard.querySelector('.card-value')?.textContent || '0';
                         spreadValue = parseFloat(valueText);
                     }
-                    
+
                     let summary = '';
-                    if (spreadValue < 0) {
-                        summary = 'Yield curve remains inverted, signaling recession concerns. Markets price gradual Fed easing as economy slows.';
-                    } else if (spreadValue > 0 && spreadValue < 50) {
-                        summary = 'Yield curve normalizing as Fed policy evolves. Markets balancing growth optimism with inflation vigilance.';
+
+                    // Analyze current rates environment
+                    if (spreadValue < -50) {
+                        summary = `Deeply inverted yield curve (${spreadValue.toFixed(0)}bps) signals significant recession risk. Fed policy restrictive with rates at ${fedFunds.toFixed(2)}%.`;
+                    } else if (spreadValue < 0) {
+                        summary = `Inverted yield curve reflects recession concerns and expectations of Fed easing. Short-term pressure on ${twoYear.toFixed(2)}% 2-year.`;
+                    } else if (spreadValue < 50) {
+                        summary = `Normalizing yield curve (+${spreadValue.toFixed(0)}bps spread) as Fed policy stabilizes. 10-year at ${tenYear.toFixed(2)}% pricing growth recovery.`;
+                    } else if (spreadValue < 150) {
+                        summary = `Steepening curve (+${spreadValue.toFixed(0)}bps) reflects growth optimism and inflation expectations. Term premium rising in long-end.`;
                     } else {
-                        summary = 'Steepening yield curve reflects growth expectations. Long-term rates rise on fiscal concerns and term premium.';
+                        summary = `Steep yield curve (+${spreadValue.toFixed(0)}bps) indicates strong growth outlook but potential inflation concerns at ${tenYear.toFixed(2)}% 10-year.`;
                     }
-                    
+
+                    // Add Fed policy context
+                    if (fedFunds > 5.0) {
+                        summary += ' Fed maintains restrictive stance.';
+                    } else if (fedFunds > 4.0) {
+                        summary += ' Fed policy moderately restrictive.';
+                    } else if (fedFunds > 2.0) {
+                        summary += ' Fed policy becoming neutral.';
+                    } else {
+                        summary += ' Fed policy accommodative.';
+                    }
+
                     summaryElement.textContent = summary;
                 }
             }
