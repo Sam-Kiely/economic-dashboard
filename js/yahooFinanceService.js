@@ -3,14 +3,8 @@ class YahooFinanceService {
     constructor() {
         this.cache = {};
         this.lastFetch = {};
-        this.useVercelAPI = false; // Disable Vercel API, use CORS proxy directly
-        // Try multiple CORS proxies for reliability
-        this.corsProxies = [
-            'https://corsproxy.io/?',
-            'https://api.allorigins.win/raw?url=',
-            'https://cors-anywhere.herokuapp.com/'
-        ];
-        this.corsProxy = this.corsProxies[0]; // Default to first proxy
+        this.useVercelAPI = true; // Use Vercel API routes
+        this.corsProxy = 'https://corsproxy.io/?'; // Fallback (not used with Vercel API)
         this.cacheDuration = 60000; // 1 minute cache for quotes
 
         // Symbol mappings
@@ -87,35 +81,35 @@ class YahooFinanceService {
         try {
             let data;
 
-            // Try multiple CORS proxies if needed
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
-            let lastError = null;
-
-            for (const proxy of this.corsProxies) {
+            // Use Vercel API route
+            if (this.useVercelAPI) {
                 try {
-                    const proxyUrl = proxy + encodeURIComponent(url);
-                    console.log(`Fetching Yahoo Finance data for ${symbol} via ${proxy}`);
+                    const vercelUrl = `/api/yahoo?symbol=${symbol}`;
+                    console.log(`Fetching Yahoo Finance data via Vercel API: ${symbol}`);
 
-                    const response = await fetch(proxyUrl, {
-                        timeout: 10000 // 10 second timeout
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    const vercelResponse = await fetch(vercelUrl);
+                    if (vercelResponse.ok) {
+                        data = await vercelResponse.json();
+                    } else {
+                        throw new Error(`Vercel API failed: ${vercelResponse.status}`);
                     }
-
-                    data = await response.json();
-                    break; // Success, exit loop
-
-                } catch (error) {
-                    console.warn(`Proxy ${proxy} failed for ${symbol}:`, error.message);
-                    lastError = error;
-                    // Try next proxy
+                } catch (vercelError) {
+                    console.error(`Vercel API error for ${symbol}:`, vercelError.message);
+                    throw vercelError;
                 }
-            }
+            } else {
+                // Fallback to CORS proxy (should not be used)
+                const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
+                const proxyUrl = this.corsProxy + encodeURIComponent(url);
+                console.log(`Fetching Yahoo Finance data for ${symbol}`);
 
-            if (!data) {
-                throw lastError || new Error('All CORS proxies failed');
+                const response = await fetch(proxyUrl);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                data = await response.json();
             }
 
             if (!data.chart || !data.chart.result || !data.chart.result[0]) {
@@ -187,35 +181,35 @@ class YahooFinanceService {
         try {
             let data;
 
-            // Try multiple CORS proxies if needed
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
-            let lastError = null;
-
-            for (const proxy of this.corsProxies) {
+            // Use Vercel API route
+            if (this.useVercelAPI) {
                 try {
-                    const proxyUrl = proxy + encodeURIComponent(url);
-                    console.log(`Fetching historical data for ${symbol} (${range}) via ${proxy}`);
+                    const vercelUrl = `/api/yahoo?symbol=${symbol}&range=${range}&interval=${interval}`;
+                    console.log(`Fetching historical data via Vercel API for ${symbol} (${range})`);
 
-                    const response = await fetch(proxyUrl, {
-                        timeout: 15000 // 15 second timeout for historical data
-                    });
-
-                    if (!response.ok) {
-                        throw new Error(`HTTP error! status: ${response.status}`);
+                    const vercelResponse = await fetch(vercelUrl);
+                    if (vercelResponse.ok) {
+                        data = await vercelResponse.json();
+                    } else {
+                        throw new Error(`Vercel API failed: ${vercelResponse.status}`);
                     }
-
-                    data = await response.json();
-                    break; // Success, exit loop
-
-                } catch (error) {
-                    console.warn(`Proxy ${proxy} failed for historical ${symbol}:`, error.message);
-                    lastError = error;
-                    // Try next proxy
+                } catch (vercelError) {
+                    console.error(`Vercel API error for historical ${symbol}:`, vercelError.message);
+                    throw vercelError;
                 }
-            }
+            } else {
+                // Fallback to CORS proxy (should not be used)
+                const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
+                const proxyUrl = this.corsProxy + encodeURIComponent(url);
+                console.log(`Fetching historical data for ${symbol} (${range})`);
 
-            if (!data) {
-                throw lastError || new Error('All CORS proxies failed');
+                const response = await fetch(proxyUrl);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                data = await response.json();
             }
             
             if (!data.chart || !data.chart.result || !data.chart.result[0]) {

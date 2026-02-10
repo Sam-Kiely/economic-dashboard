@@ -3,11 +3,11 @@ class APIService {
     constructor() {
         this.cache = {};
         this.lastFetch = {};
-        // Use CORS proxy for better compatibility
-        this.useVercelAPI = false;
-        // Use CORS proxy
+        // Use Vercel API routes instead of CORS proxy
+        this.useVercelAPI = true;
+        // Fallback CORS proxy (not used when Vercel API is enabled)
         this.corsProxy = 'https://corsproxy.io/?';
-        this.useProxy = true;
+        this.useProxy = false;
     }
 
     // Helper method to filter observations by frequency
@@ -163,36 +163,72 @@ class APIService {
 
     // FRED API Methods
     async getFREDSeries(seriesId, limit = 13, frequency = null, forceRefresh = false) {
-        // Always use CORS proxy method
-        // Build URL with optional frequency parameter
-        let url = `${API_CONFIG.FRED.baseURL}?series_id=${seriesId}&api_key=${API_CONFIG.FRED.apiKey}&file_type=json&limit=${limit}&sort_order=desc`;
+        // Use Vercel API route for server-side requests
+        if (this.useVercelAPI) {
+            try {
+                // Calculate date range for limit
+                const endDate = new Date().toISOString().split('T')[0];
+                const startDate = new Date();
 
-        // Add frequency parameter if specified
-        if (frequency) {
-            url += `&frequency=${frequency}`;
-        }
-
-        try {
-            const cacheKey = `fred_${seriesId}_${frequency || 'default'}`;
-            const data = await this.fetchWithCache(url, cacheKey, API_CONFIG.UPDATE_INTERVALS.economic, forceRefresh);
-            
-            if (data && data.observations && data.observations.length > 0) {
-                // Filter out any "." values (missing data)
-                const validObservations = data.observations
-                    .filter(obs => obs.value !== '.' && !isNaN(parseFloat(obs.value)))
-                    .reverse(); // Reverse to get chronological order
-                
-                if (validObservations.length > 0) {
-                    return {
-                        values: validObservations.map(obs => parseFloat(obs.value)),
-                        dates: validObservations.map(obs => obs.date),
-                        seriesId: seriesId  // Include seriesId for date adjustment
-                    };
+                // Calculate start date based on limit and frequency
+                if (frequency === 'd' || !frequency) {
+                    startDate.setDate(startDate.getDate() - (limit * 2)); // Extra buffer for daily data
+                } else if (frequency === 'w') {
+                    startDate.setDate(startDate.getDate() - (limit * 7 * 2));
+                } else if (frequency === 'm') {
+                    startDate.setMonth(startDate.getMonth() - (limit * 2));
+                } else if (frequency === 'q') {
+                    startDate.setMonth(startDate.getMonth() - (limit * 3 * 2));
+                } else if (frequency === 'a') {
+                    startDate.setFullYear(startDate.getFullYear() - (limit * 2));
                 }
+
+                const startDateStr = startDate.toISOString().split('T')[0];
+
+                // Use Vercel API endpoint
+                const vercelUrl = `/api/fred?series=${seriesId}&start_date=${startDateStr}&end_date=${endDate}`;
+                console.log(`Fetching FRED data via Vercel API: ${seriesId}`);
+
+                const response = await fetch(vercelUrl);
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data && data.observations && data.observations.length > 0) {
+                        // Filter out any "." values (missing data) and apply frequency filter
+                        let validObservations = data.observations
+                            .filter(obs => obs.value !== '.' && !isNaN(parseFloat(obs.value)));
+
+                        // Apply frequency filtering if specified
+                        if (frequency) {
+                            validObservations = this.filterByFrequency(validObservations, frequency);
+                        }
+
+                        // Sort by date descending and limit
+                        validObservations.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        validObservations = validObservations.slice(0, limit);
+
+                        // Reverse to get chronological order
+                        validObservations.reverse();
+
+                        if (validObservations.length > 0) {
+                            return {
+                                values: validObservations.map(obs => parseFloat(obs.value)),
+                                dates: validObservations.map(obs => obs.date),
+                                seriesId: seriesId
+                            };
+                        }
+                    }
+                } else {
+                    console.error(`Vercel API failed for ${seriesId}: ${response.status}`);
+                }
+            } catch (error) {
+                console.error(`Error fetching FRED data for ${seriesId}:`, error.message);
             }
-        } catch (error) {
-            console.error(`FRED API error for ${seriesId}:`, error);
+            return null;
         }
+
+        // Fallback to CORS proxy method (should not be reached with useVercelAPI = true)
+        console.error('CORS proxy method is disabled - use Vercel API routes');
         return null;
     }
 
