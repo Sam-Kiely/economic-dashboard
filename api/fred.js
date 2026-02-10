@@ -35,10 +35,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Build FRED API URL
+    // Build FRED API URL - use environment variable or fallback
     const params = new URLSearchParams({
       series_id: series,
-      api_key: '7b2b5891d1e72a3dff72e1806e851d20',
+      api_key: process.env.FRED_API_KEY || '7b2b5891d1e72a3dff72e1806e851d20',
       file_type: 'json',
       sort_order: 'desc'
     });

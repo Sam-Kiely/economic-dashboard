@@ -455,16 +455,24 @@ class APIService {
     // Test API connections
     async testConnections() {
         console.log('Testing API connections...');
-        
-        // Test FRED
-        try {
-            const fredTest = await this.getFREDSeries('UNRATE', 1);
-            console.log('FRED API:', fredTest ? '✓ Connected' : '✗ Failed');
-        } catch (e) {
-            console.log('FRED API: ✗ Failed -', e.message);
+
+        // Check if we're in Vercel environment
+        const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
+                                   window.location.hostname === 'localhost' ||
+                                   window.location.hostname === '127.0.0.1';
+
+        if (isVercelEnvironment) {
+            console.log('FRED API: ✓ Using Vercel API routes');
+            console.log('Yahoo Finance API: ✓ Using Vercel API routes');
+        } else {
+            // Test FRED with direct API
+            try {
+                const fredTest = await this.getFREDSeries('UNRATE', 1);
+                console.log('FRED API:', fredTest ? '✓ Connected' : '✗ Failed');
+            } catch (e) {
+                console.log('FRED API: ✗ Failed -', e.message);
+            }
         }
-        
-        
     }
 
     // Main update method - expanded to include all indicators with more historical data

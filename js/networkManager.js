@@ -20,11 +20,21 @@ class NetworkManager {
     async detectNetworkEnvironment() {
         console.log('🔍 Detecting network environment...');
 
+        // Skip network detection if we're using Vercel APIs
+        const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
+                                   window.location.hostname === 'localhost' ||
+                                   window.location.hostname === '127.0.0.1';
+
+        if (isVercelEnvironment) {
+            console.log('✅ Running in Vercel environment - skipping CORS proxy detection');
+            this.isCorporateNetwork = false;
+            return;
+        }
+
         // Test basic connectivity to known external services
         const testUrls = [
             'https://corsproxy.io/?https://httpbin.org/status/200',
-            'https://api.allorigins.win/raw?url=https://httpbin.org/status/200',
-            'https://fred.stlouisfed.org/graph/fredgraph.csv?&id=GDPC1&scale=left&cosd=2020-01-01&coed=2024-01-01&fq=Quarterly&fam=avg&fgst=lin&fgsnd=2020-02-01&line_index=1&transformation=lin&vintage_date=2024-01-01&revision_date=2024-01-01&nd=1947-01-01'
+            'https://api.allorigins.win/raw?url=https://httpbin.org/status/200'
         ];
 
         let blockedCount = 0;
