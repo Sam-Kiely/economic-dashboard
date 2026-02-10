@@ -60,11 +60,8 @@ const API_CONFIG = {
             'CFR',   // Cullen/Frost Bankers
             'HBAN',  // Huntington Bancshares
             'ZION',  // Zions Bancorporation
-            'CMA',   // Comerica
-            'SNV',   // Synovus Financial
             'PB',    // Prosperity Bancshares
-            'BOKF',  // BOK Financial
-            'CADE'   // Cadence Bank
+            'BOKF'   // BOK Financial
         ],
         indexTicker: '^KRX'  // SPDR S&P Regional Banking ETF (benchmark)
     },
