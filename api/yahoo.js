@@ -16,25 +16,35 @@ export default async function handler(req, res) {
     return;
   }
 
-  const { symbol } = req.query;
+  const { symbol, range, interval } = req.query;
 
   if (!symbol) {
     res.status(400).json({ error: 'Symbol is required' });
     return;
   }
 
+  // Create cache key including range and interval
+  const cacheKey = `${symbol}_${range || 'default'}_${interval || 'default'}`;
+
   // Check cache
-  const cached = cache.get(symbol);
+  const cached = cache.get(cacheKey);
   if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
-    console.log(`Returning cached data for ${symbol}`);
+    console.log(`Returning cached data for ${cacheKey}`);
     res.status(200).json(cached.data);
     return;
   }
 
   try {
-    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
+    // Build URL with optional range and interval parameters
+    let url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
+    const params = [];
+    if (range) params.push(`range=${range}`);
+    if (interval) params.push(`interval=${interval}`);
+    if (params.length > 0) {
+      url += '?' + params.join('&');
+    }
 
-    console.log(`Fetching Yahoo Finance data for: ${symbol}`);
+    console.log(`Fetching Yahoo Finance data for: ${url}`);
     const response = await fetch(url, {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
@@ -47,8 +57,8 @@ export default async function handler(req, res) {
 
     const data = await response.json();
 
-    // Cache the response
-    cache.set(symbol, {
+    // Cache the response with the cache key
+    cache.set(cacheKey, {
       data: data,
       timestamp: Date.now()
     });

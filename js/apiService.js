@@ -77,14 +77,21 @@ class APIService {
             window.loadingManager.showServiceLoading('apiService', `Fetching ${cacheKey}...`);
         }
 
+        // Skip CORS proxy for Vercel API calls
+        if (this.useVercelAPI) {
+            // This method should not be used with Vercel API
+            // Return error to trigger fallback to direct API calls
+            throw new Error('Use Vercel API routes instead of fetchWithCache');
+        }
+
         // Define CORS proxies (primary and fallback)
         const proxies = [
             'https://corsproxy.io/?',
             'https://api.allorigins.win/raw?url='
         ];
-        
+
         let lastError = null;
-        
+
         // Try each proxy
         for (let proxyIndex = 0; proxyIndex < proxies.length; proxyIndex++) {
             const currentProxy = proxies[proxyIndex];
@@ -160,8 +167,13 @@ class APIService {
     // FRED API Methods
     async getFREDSeries(seriesId, limit = 13, frequency = null, forceRefresh = false) {
         try {
+            // Check if we're in production/preview (has vercel domain or localhost for testing)
+            const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
+                                       window.location.hostname === 'localhost' ||
+                                       window.location.hostname === '127.0.0.1';
+
             // Try using Vercel API route first
-            if (this.useVercelAPI) {
+            if (this.useVercelAPI && isVercelEnvironment) {
                 // Calculate date range for limit
                 const endDate = new Date().toISOString().split('T')[0];
                 const startDate = new Date();

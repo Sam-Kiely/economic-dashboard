@@ -81,8 +81,13 @@ class YahooFinanceService {
         try {
             let data;
 
+            // Check if we're in Vercel environment
+            const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
+                                       window.location.hostname === 'localhost' ||
+                                       window.location.hostname === '127.0.0.1';
+
             // Try using Vercel API route first
-            if (this.useVercelAPI) {
+            if (this.useVercelAPI && isVercelEnvironment) {
                 try {
                     const vercelUrl = `/api/yahoo?symbol=${symbol}`;
                     console.log(`Fetching Yahoo Finance data via Vercel API: ${symbol}`);
@@ -189,19 +194,54 @@ class YahooFinanceService {
         }
 
         try {
-            // Valid ranges: 1d, 5d, 1mo, 3mo, 6mo, 1y, 2y, 5y, 10y, ytd, max
-            // Valid intervals: 1m, 2m, 5m, 15m, 30m, 60m, 90m, 1h, 1d, 5d, 1wk, 1mo, 3mo
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
-            const proxyUrl = this.corsProxy + encodeURIComponent(url);
-            
-            console.log(`Fetching historical data for ${symbol} (${range})`);
-            const response = await fetch(proxyUrl);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            let data;
+
+            // Check if we're in Vercel environment
+            const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
+                                       window.location.hostname === 'localhost' ||
+                                       window.location.hostname === '127.0.0.1';
+
+            if (this.useVercelAPI && isVercelEnvironment) {
+                try {
+                    // Use Vercel API route with range and interval parameters
+                    const vercelUrl = `/api/yahoo?symbol=${symbol}&range=${range}&interval=${interval}`;
+                    console.log(`Fetching historical data via Vercel API for ${symbol} (${range})`);
+
+                    const vercelResponse = await fetch(vercelUrl);
+                    if (vercelResponse.ok) {
+                        data = await vercelResponse.json();
+                    } else {
+                        console.warn(`Vercel API failed for historical data ${symbol}, falling back to CORS proxy`);
+                        throw new Error('Vercel API failed, use fallback');
+                    }
+                } catch (vercelError) {
+                    // Fallback to CORS proxy
+                    console.log(`Using CORS proxy for historical data ${symbol} due to:`, vercelError.message);
+                    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
+                    const proxyUrl = this.corsProxy + encodeURIComponent(url);
+
+                    const response = await fetch(proxyUrl);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    data = await response.json();
+                }
+            } else {
+                // Direct CORS proxy if not in Vercel environment
+                const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
+                const proxyUrl = this.corsProxy + encodeURIComponent(url);
+
+                console.log(`Fetching historical data for ${symbol} (${range})`);
+                const response = await fetch(proxyUrl);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                data = await response.json();
             }
-            
-            const data = await response.json();
             
             if (!data.chart || !data.chart.result || !data.chart.result[0]) {
                 throw new Error('Invalid response structure');
@@ -555,8 +595,13 @@ class YahooFinanceService {
 
     // Get multiple quotes efficiently
     async getMultipleQuotes(symbols) {
+        // Check if we're in Vercel environment
+        const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
+                                   window.location.hostname === 'localhost' ||
+                                   window.location.hostname === '127.0.0.1';
+
         // Use batch endpoint if using Vercel API
-        if (this.useVercelAPI && symbols.length > 1) {
+        if (this.useVercelAPI && isVercelEnvironment && symbols.length > 1) {
             try {
                 const vercelUrl = `/api/yahoo-batch?symbols=${symbols.join(',')}`;
                 console.log(`Fetching batch Yahoo Finance data via Vercel API for ${symbols.length} symbols`);
