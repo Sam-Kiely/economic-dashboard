@@ -77,9 +77,14 @@ class APIService {
             window.loadingManager.showServiceLoading('apiService', `Fetching ${cacheKey}...`);
         }
 
-        // Skip CORS proxy for Vercel API calls
-        if (this.useVercelAPI) {
-            // This method should not be used with Vercel API
+        // Skip CORS proxy for Vercel API calls when in Vercel environment
+        const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
+                                   window.location.hostname.includes('vercel.') ||
+                                   window.location.hostname === 'localhost' ||
+                                   window.location.hostname === '127.0.0.1';
+
+        if (this.useVercelAPI && isVercelEnvironment) {
+            // This method should not be used with Vercel API - use direct endpoint calls instead
             // Return error to trigger fallback to direct API calls
             throw new Error('Use Vercel API routes instead of fetchWithCache');
         }
@@ -169,6 +174,7 @@ class APIService {
         try {
             // Check if we're in production/preview (has vercel domain or localhost for testing)
             const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
+                                       window.location.hostname.includes('vercel.') ||
                                        window.location.hostname === 'localhost' ||
                                        window.location.hostname === '127.0.0.1';
 
@@ -458,6 +464,7 @@ class APIService {
 
         // Check if we're in Vercel environment
         const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
+                                   window.location.hostname.includes('vercel.') ||
                                    window.location.hostname === 'localhost' ||
                                    window.location.hostname === '127.0.0.1';
 

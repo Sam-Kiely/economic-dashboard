@@ -83,6 +83,7 @@ class YahooFinanceService {
 
             // Check if we're in Vercel environment
             const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
+                                       window.location.hostname.includes('vercel.') ||
                                        window.location.hostname === 'localhost' ||
                                        window.location.hostname === '127.0.0.1';
 
@@ -198,6 +199,7 @@ class YahooFinanceService {
 
             // Check if we're in Vercel environment
             const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
+                                       window.location.hostname.includes('vercel.') ||
                                        window.location.hostname === 'localhost' ||
                                        window.location.hostname === '127.0.0.1';
 
@@ -597,6 +599,7 @@ class YahooFinanceService {
     async getMultipleQuotes(symbols) {
         // Check if we're in Vercel environment
         const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
+                                   window.location.hostname.includes('vercel.') ||
                                    window.location.hostname === 'localhost' ||
                                    window.location.hostname === '127.0.0.1';
 
