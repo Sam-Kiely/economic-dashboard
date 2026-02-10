@@ -304,17 +304,15 @@ function initializeMarketChart(chartId, dataKey, color) {
 
 // Initialize Rates Charts
 function initializeRatesCharts() {
-    initializeRateChart('2yr-chart', 'treasury2yr', '#FF5722');
-    initializeRateChart('5yr-chart', 'treasury5yr', '#673AB7');
-    initializeRateChart('10yr-chart', 'treasury10yr', '#2196F3');
-    initializeRateChart('30yr-chart', 'treasury30yr', '#4CAF50');
-    initializeRateChart('sofr-chart', 'sofr1m', '#FF9800');
-    initializeRateChart('fedfunds-chart', 'fedFunds', '#9C27B0');
-    initializeRateChart('tbill-chart', 'tbill3m', '#00BCD4');
-    initializeRateChart('mortgage-chart', 'mortgage30yr', '#E91E63');
-    initializeRateChart('highyield-chart', 'highYield', '#795548');
-    initializeRateChart('prime-chart', 'primeRate', '#607D8B');
-    initializeRateChart('spread-chart', 'spread', '#9E9E9E');
+    // DISABLED: Rates charts are now initialized and populated by apiService-v2.js
+    // This prevents conflicts with the unified FRED data loading system
+    console.log('📊 Rate charts now handled by apiService-v2, skipping legacy initialization');
+    return;
+
+    // Old conflicting logic disabled:
+    // initializeRateChart('2yr-chart', 'treasury2yr', '#FF5722');
+    // initializeRateChart('5yr-chart', 'treasury5yr', '#673AB7');
+    // etc...
 }
 // Add this function to your existing script.js file after the initializeRatesCharts function
 

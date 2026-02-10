@@ -561,7 +561,6 @@ class DataUpdater {
         }
 
         // Update period returns for rate cards
-        const isRateCard = ['2yr', '10yr', '30yr', '5yr', 'sofr', 'fedfunds', 'tbill', 'highyield', 'spread'].some(rate => cardId.includes(rate));
         if (isRateCard && data.returns && Object.keys(data.returns).length > 0) {
             this.updateRatePeriodReturns(cardId, data.returns);
         }
@@ -581,23 +580,9 @@ class DataUpdater {
 
     // Update a chart with new data
     updateChart(chartId, data, labels) {
-        // SPECIAL HANDLING: Rate charts use different data sources
-        const yahooRateCharts = []; // No rate charts use Yahoo Finance anymore
-        const fredRateCharts = ['sofr-chart', '2yr-chart', '5yr-chart', '10yr-chart', '30yr-chart', 'spread-chart', 'fedfunds-chart', 'highyield-chart', 'tbill-chart']; // All rate charts now use FRED
-        const rateChartIds = ['2yr-chart', '5yr-chart', '10yr-chart', '30yr-chart', 'sofr-chart', 
-                             'fedfunds-chart', 'tbill-chart', 'highyield-chart', 'spread-chart'];
-        
-        if (yahooRateCharts.includes(chartId)) {
-            this.updateRateChartWithYahooData(chartId);
-            return;
-        } else if (fredRateCharts.includes(chartId)) {
-            console.log(`${chartId} uses FRED data - skipping dashboard coordinator update`);
-            // FRED charts are handled independently, don't use dashboard coordinator data
-            return;
-        } else if (rateChartIds.includes(chartId)) {
-            console.log(`Skipping ${chartId} - not yet mapped`);
-            return;
-        }
+        // Rate charts are now handled by the unified apiService-v2 system
+        // No special handling needed - all charts use the same update mechanism
+        console.log(`📊 Updating chart ${chartId} with data:`, { dataPoints: data?.length, labelCount: labels?.length });
         
         const chartElement = document.getElementById(chartId);
         if (!chartElement) {
