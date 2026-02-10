@@ -281,7 +281,7 @@ class APIService {
         let treasury10yr = null;
 
         try {
-            // Core CPI
+            // Core CPI (YoY calculation)
             const coreCpiData = await this.getFREDSeries(API_CONFIG.FRED.series.coreCPI, 24, 'm');
             if (coreCpiData && coreCpiData.values.length >= 13) {
                 const yoyValues = [];
@@ -313,7 +313,77 @@ class APIService {
                 }
             }
 
-            // GDP
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Core PPI (YoY calculation)
+            const corePpiData = await this.getFREDSeries(API_CONFIG.FRED.series.corePPI, 24, 'm');
+            if (corePpiData && corePpiData.values.length >= 13) {
+                const yoyValues = [];
+                const yoyDates = [];
+
+                for (let i = 12; i < corePpiData.values.length; i++) {
+                    const current = corePpiData.values[i];
+                    const yearAgo = corePpiData.values[i - 12];
+                    const yoyChange = ((current - yearAgo) / yearAgo) * 100;
+                    yoyValues.push(yoyChange);
+                    yoyDates.push(corePpiData.dates[i]);
+                }
+
+                if (yoyValues.length > 0) {
+                    const currentYoY = yoyValues[yoyValues.length - 1];
+                    const previousYoY = yoyValues.length > 1 ? yoyValues[yoyValues.length - 2] : currentYoY;
+
+                    updates['coreppi-chart'] = {
+                        current: currentYoY,
+                        change: currentYoY - previousYoY,
+                        changeType: (currentYoY - previousYoY) > 0 ? 'negative' : 'positive',
+                        changeLabel: 'MoM',
+                        historicalData: yoyValues.slice(-12),
+                        dates: yoyDates.slice(-12).map(d => this.formatDate(d)),
+                        observationDate: yoyDates[yoyDates.length - 1],
+                        seriesId: 'corePPI'
+                    };
+                    console.log('Updated Core PPI YoY:', currentYoY);
+                }
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Core PCE (YoY calculation)
+            const corePceData = await this.getFREDSeries(API_CONFIG.FRED.series.corePCE, 24, 'm');
+            if (corePceData && corePceData.values.length >= 13) {
+                const yoyValues = [];
+                const yoyDates = [];
+
+                for (let i = 12; i < corePceData.values.length; i++) {
+                    const current = corePceData.values[i];
+                    const yearAgo = corePceData.values[i - 12];
+                    const yoyChange = ((current - yearAgo) / yearAgo) * 100;
+                    yoyValues.push(yoyChange);
+                    yoyDates.push(corePceData.dates[i]);
+                }
+
+                if (yoyValues.length > 0) {
+                    const currentYoY = yoyValues[yoyValues.length - 1];
+                    const previousYoY = yoyValues.length > 1 ? yoyValues[yoyValues.length - 2] : currentYoY;
+
+                    updates['corepce-chart'] = {
+                        current: currentYoY,
+                        change: currentYoY - previousYoY,
+                        changeType: (currentYoY - previousYoY) > 0 ? 'negative' : 'positive',
+                        changeLabel: 'MoM',
+                        historicalData: yoyValues.slice(-12),
+                        dates: yoyDates.slice(-12).map(d => this.formatDate(d)),
+                        observationDate: yoyDates[yoyDates.length - 1],
+                        seriesId: 'corePCE'
+                    };
+                    console.log('Updated Core PCE YoY:', currentYoY);
+                }
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // GDP (Already in QoQ Annualized format)
             const gdpData = await this.getFREDSeries(API_CONFIG.FRED.series.gdp, 8, 'q');
             if (gdpData && gdpData.values.length > 1) {
                 const current = gdpData.values[gdpData.values.length - 1];
@@ -332,7 +402,328 @@ class APIService {
                 console.log('Updated GDP:', current);
             }
 
-            // Add other indicators as needed...
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Trade Deficit
+            const tradeData = await this.getFREDSeries(API_CONFIG.FRED.series.tradeDeficit, 13, 'm');
+            if (tradeData && tradeData.values.length > 1) {
+                const current = Math.abs(tradeData.values[tradeData.values.length - 1]);
+                const previous = Math.abs(tradeData.values[tradeData.values.length - 2]);
+                const momChange = ((current - previous) / previous) * 100;
+
+                updates['trade-chart'] = {
+                    current: current / 1000,
+                    change: momChange,
+                    changeType: momChange > 0 ? 'negative' : 'positive',
+                    changeLabel: 'MoM',
+                    historicalData: tradeData.values.slice(-12).map(v => Math.abs(v) / 1000),
+                    dates: tradeData.dates.slice(-12).map(d => this.formatDate(d)),
+                    observationDate: tradeData.dates[tradeData.dates.length - 1],
+                    seriesId: 'tradeDeficit'
+                };
+                console.log('Updated Trade Deficit:', current / 1000, 'billion');
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Unemployment Rate
+            const unemploymentData = await this.getFREDSeries(API_CONFIG.FRED.series.unemployment, 13, 'm');
+            if (unemploymentData && unemploymentData.values.length > 1) {
+                const current = unemploymentData.values[unemploymentData.values.length - 1];
+                const previous = unemploymentData.values[unemploymentData.values.length - 2];
+
+                updates['unemployment-chart'] = {
+                    current: current,
+                    change: current - previous,
+                    changeType: current < previous ? 'positive' : 'negative',
+                    changeLabel: 'MoM',
+                    historicalData: unemploymentData.values.slice(-12),
+                    dates: unemploymentData.dates.slice(-12).map(d => this.formatDate(d)),
+                    observationDate: unemploymentData.dates[unemploymentData.dates.length - 1],
+                    seriesId: 'unemployment'
+                };
+                console.log('Updated unemployment data:', current);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Jobless Claims
+            const joblessData = await this.getFREDSeries(API_CONFIG.FRED.series.joblessClaims, 13);
+            if (joblessData && joblessData.values.length > 1) {
+                const current = joblessData.values[joblessData.values.length - 1];
+                const previous = joblessData.values[joblessData.values.length - 2];
+
+                updates['jobless-chart'] = {
+                    current: current / 1000,
+                    change: (current - previous) / 1000,
+                    changeType: current < previous ? 'positive' : 'negative',
+                    changeLabel: 'WoW',
+                    historicalData: joblessData.values.map(v => v / 1000),
+                    dates: joblessData.dates.map(d => this.formatDate(d, true, false)),
+                    observationDate: joblessData.dates[joblessData.dates.length - 1],
+                    seriesId: 'joblessClaims'
+                };
+                console.log('Updated jobless claims (thousands):', current / 1000);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Retail Sales
+            const retailData = await this.getFREDSeries(API_CONFIG.FRED.series.retailSales, 13, 'm');
+            if (retailData && retailData.values.length > 1) {
+                const current = retailData.values[retailData.values.length - 1];
+                const previous = retailData.values[retailData.values.length - 2];
+
+                updates['retail-chart'] = {
+                    current: current,
+                    change: current - previous,
+                    changeType: current > 0 ? 'positive' : 'negative',
+                    changeLabel: 'MoM',
+                    historicalData: retailData.values.slice(-12),
+                    dates: retailData.dates.slice(-12).map(d => this.formatDate(d)),
+                    observationDate: retailData.dates[retailData.dates.length - 1],
+                    seriesId: 'retailSales'
+                };
+                console.log('Updated Retail Sales MoM:', current);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Durable Goods Orders
+            const durableGoodsData = await this.getFREDSeries(API_CONFIG.FRED.series.durableGoods, 14, 'm');
+            if (durableGoodsData && durableGoodsData.values.length > 2) {
+                const momChanges = [];
+                const momDates = [];
+
+                for (let i = 1; i < durableGoodsData.values.length; i++) {
+                    const current = durableGoodsData.values[i];
+                    const previous = durableGoodsData.values[i - 1];
+                    const momChange = ((current - previous) / previous) * 100;
+                    momChanges.push(momChange);
+                    momDates.push(durableGoodsData.dates[i]);
+                }
+
+                if (momChanges.length > 0) {
+                    const currentMoM = momChanges[momChanges.length - 1];
+                    const previousMoM = momChanges.length > 1 ? momChanges[momChanges.length - 2] : 0;
+
+                    updates['durablegoods-chart'] = {
+                        current: currentMoM,
+                        change: currentMoM - previousMoM,
+                        changeType: currentMoM > 0 ? 'positive' : 'negative',
+                        changeLabel: 'MoM',
+                        historicalData: momChanges.slice(-12),
+                        dates: momDates.slice(-12).map(d => this.formatDate(d)),
+                        observationDate: momDates[momDates.length - 1],
+                        seriesId: 'durableGoods'
+                    };
+                    console.log('Updated Durable Goods MoM:', currentMoM);
+                }
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // New Home Sales
+            const homeSalesData = await this.getFREDSeries(API_CONFIG.FRED.series.newHomeSales, 13, 'm');
+            if (homeSalesData && homeSalesData.values.length > 1) {
+                const current = homeSalesData.values[homeSalesData.values.length - 1];
+                const previous = homeSalesData.values[homeSalesData.values.length - 2];
+                const momChange = ((current - previous) / previous) * 100;
+
+                updates['homesales-chart'] = {
+                    current: current,
+                    change: momChange,
+                    changeType: momChange > 0 ? 'positive' : 'negative',
+                    changeLabel: 'MoM',
+                    historicalData: homeSalesData.values.slice(-12),
+                    dates: homeSalesData.dates.slice(-12).map(d => this.formatDate(d)),
+                    observationDate: homeSalesData.dates[homeSalesData.dates.length - 1],
+                    seriesId: 'newHomeSales'
+                };
+                console.log('Updated New Home Sales:', current);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Existing Home Sales
+            const existingHomeSalesData = await this.getFREDSeries(API_CONFIG.FRED.series.existingHomeSales, 13, 'm');
+            if (existingHomeSalesData && existingHomeSalesData.values.length > 1) {
+                const current = existingHomeSalesData.values[existingHomeSalesData.values.length - 1];
+                const previous = existingHomeSalesData.values[existingHomeSalesData.values.length - 2];
+                const momChange = ((current - previous) / previous) * 100;
+
+                updates['existinghomes-chart'] = {
+                    current: current,
+                    change: momChange,
+                    changeType: momChange > 0 ? 'positive' : 'negative',
+                    changeLabel: 'MoM',
+                    historicalData: existingHomeSalesData.values.slice(-12),
+                    dates: existingHomeSalesData.dates.slice(-12).map(d => this.formatDate(d)),
+                    observationDate: existingHomeSalesData.dates[existingHomeSalesData.dates.length - 1],
+                    seriesId: 'existingHomeSales'
+                };
+                console.log('Updated Existing Home Sales:', current);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Consumer Sentiment
+            const sentimentData = await this.getFREDSeries(API_CONFIG.FRED.series.consumerSentiment, 13, 'm');
+            if (sentimentData && sentimentData.values.length > 1) {
+                const current = sentimentData.values[sentimentData.values.length - 1];
+                const previous = sentimentData.values[sentimentData.values.length - 2];
+
+                updates['sentiment-chart'] = {
+                    current: current,
+                    change: current - previous,
+                    changeType: current > previous ? 'positive' : 'negative',
+                    changeLabel: 'MoM',
+                    historicalData: sentimentData.values.slice(-12),
+                    dates: sentimentData.dates.slice(-12).map(d => this.formatDate(d)),
+                    observationDate: sentimentData.dates[sentimentData.dates.length - 1],
+                    seriesId: 'consumerSentiment'
+                };
+                console.log('Updated Consumer Sentiment:', current);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Fed Funds Rate
+            const fedFundsData = await this.getFREDSeries(API_CONFIG.FRED.series.fedFunds, 100);
+            if (fedFundsData && fedFundsData.values.length > 0) {
+                const current = fedFundsData.values[fedFundsData.values.length - 1];
+                const extendedReturns = this.calculateExtendedReturnsForRates(fedFundsData.values, fedFundsData.dates);
+
+                updates['fed-chart'] = {
+                    current: current,
+                    change: extendedReturns['1W'] || 0,
+                    changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
+                    changeLabel: '1W',
+                    historicalData: fedFundsData.values.slice(-30),
+                    dates: fedFundsData.dates.slice(-30).map(d => this.formatDate(d)),
+                    observationDate: fedFundsData.dates[fedFundsData.dates.length - 1],
+                    returns: extendedReturns,
+                    seriesId: 'fedFunds'
+                };
+                console.log('Updated Fed Funds Rate:', current);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 3-Month T-Bill
+            const tbill3mData = await this.getFREDSeries(API_CONFIG.FRED.series.tbill3m, 100);
+            if (tbill3mData && tbill3mData.values.length > 0) {
+                const current = tbill3mData.values[tbill3mData.values.length - 1];
+                const extendedReturns = this.calculateExtendedReturnsForRates(tbill3mData.values, tbill3mData.dates);
+
+                updates['tbill-chart'] = {
+                    current: current,
+                    change: extendedReturns['1W'] || 0,
+                    changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
+                    changeLabel: '1W',
+                    historicalData: tbill3mData.values.slice(-30),
+                    dates: tbill3mData.dates.slice(-30).map(d => this.formatDate(d)),
+                    observationDate: tbill3mData.dates[tbill3mData.dates.length - 1],
+                    returns: extendedReturns,
+                    seriesId: 'tbill3m'
+                };
+                console.log('Updated 3-Month T-Bill:', current);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Treasury 2yr
+            const treasury2yrData = await this.getFREDSeries(API_CONFIG.FRED.series.treasury2yr, 100);
+            if (treasury2yrData && treasury2yrData.values.length > 0) {
+                const current = treasury2yrData.values[treasury2yrData.values.length - 1];
+                const extendedReturns = this.calculateExtendedReturnsForRates(treasury2yrData.values, treasury2yrData.dates);
+
+                updates['2yr-chart'] = {
+                    current: current,
+                    change: extendedReturns['1W'] || 0,
+                    changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
+                    changeLabel: '1W',
+                    historicalData: treasury2yrData.values.slice(-30),
+                    dates: treasury2yrData.dates.slice(-30).map(d => this.formatDate(d)),
+                    observationDate: treasury2yrData.dates[treasury2yrData.dates.length - 1],
+                    returns: extendedReturns,
+                    seriesId: 'treasury2yr'
+                };
+                console.log('Updated 2-Year Treasury:', current);
+                treasury2yr = treasury2yrData;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Treasury 10yr
+            const treasury10yrData = await this.getFREDSeries(API_CONFIG.FRED.series.treasury10yr, 100);
+            if (treasury10yrData && treasury10yrData.values.length > 0) {
+                const current = treasury10yrData.values[treasury10yrData.values.length - 1];
+                const extendedReturns = this.calculateExtendedReturnsForRates(treasury10yrData.values, treasury10yrData.dates);
+
+                updates['10yr-chart'] = {
+                    current: current,
+                    change: extendedReturns['1W'] || 0,
+                    changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
+                    changeLabel: '1W',
+                    historicalData: treasury10yrData.values.slice(-30),
+                    dates: treasury10yrData.dates.slice(-30).map(d => this.formatDate(d)),
+                    observationDate: treasury10yrData.dates[treasury10yrData.dates.length - 1],
+                    returns: extendedReturns,
+                    seriesId: 'treasury10yr'
+                };
+                console.log('Updated 10-Year Treasury:', current);
+                treasury10yr = treasury10yrData;
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 2s10s Spread
+            if (treasury2yr && treasury10yr) {
+                const spreadData = this.calculate2s10sHistorical(treasury2yr, treasury10yr);
+                if (spreadData) {
+                    updates['2s10s-chart'] = {
+                        current: spreadData.current,
+                        change: spreadData.change,
+                        changeType: spreadData.change >= 0 ? 'positive' : 'negative',
+                        changeLabel: 'Daily',
+                        historicalData: spreadData.spreadValues.slice(-30),
+                        dates: spreadData.dates.slice(-30),
+                        seriesId: '2s10s'
+                    };
+                    console.log('Updated 2s10s Spread:', spreadData.current);
+                }
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // H8 Data
+            for (const [key, seriesId] of Object.entries(API_CONFIG.FRED.series.h8Data)) {
+                try {
+                    const h8Data = await this.getFREDSeries(seriesId, 13, 'w');
+                    if (h8Data && h8Data.values.length > 1) {
+                        const current = h8Data.values[h8Data.values.length - 1];
+                        const previous = h8Data.values[h8Data.values.length - 2];
+                        const weeklyChange = ((current - previous) / previous) * 100;
+
+                        const chartId = `h8-${key.toLowerCase()}`;
+                        updates[chartId] = {
+                            current: key === 'borrowings' ? current / 1000 : current,
+                            change: weeklyChange,
+                            changeType: weeklyChange >= 0 ? 'positive' : 'negative',
+                            changeLabel: 'WoW',
+                            historicalData: h8Data.values.map(v => key === 'borrowings' ? v / 1000 : v),
+                            dates: h8Data.dates.map(d => this.formatDate(d, true)),
+                            observationDate: h8Data.dates[h8Data.dates.length - 1],
+                            seriesId: key
+                        };
+                        console.log(`Updated H8 ${key}:`, updates[chartId].current);
+                    }
+                    await new Promise(resolve => setTimeout(resolve, 300));
+                } catch (error) {
+                    console.error(`Error fetching H8 ${key}:`, error);
+                }
+            }
 
         } catch (error) {
             console.error('Error updating economic data:', error);
