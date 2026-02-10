@@ -389,7 +389,7 @@ class APIService {
                 const current = gdpData.values[gdpData.values.length - 1];
                 const previous = gdpData.values[gdpData.values.length - 2];
 
-                updates['gdp-card'] = {
+                updates['gdp-chart'] = {
                     current: current,
                     change: current - previous,
                     changeType: current > previous ? 'positive' : 'negative',
