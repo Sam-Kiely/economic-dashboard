@@ -4,7 +4,13 @@ class YahooFinanceService {
         this.cache = {};
         this.lastFetch = {};
         this.useVercelAPI = false; // Disable Vercel API, use CORS proxy directly
-        this.corsProxy = 'https://corsproxy.io/?';
+        // Try multiple CORS proxies for reliability
+        this.corsProxies = [
+            'https://corsproxy.io/?',
+            'https://api.allorigins.win/raw?url=',
+            'https://cors-anywhere.herokuapp.com/'
+        ];
+        this.corsProxy = this.corsProxies[0]; // Default to first proxy
         this.cacheDuration = 60000; // 1 minute cache for quotes
 
         // Symbol mappings
@@ -81,18 +87,36 @@ class YahooFinanceService {
         try {
             let data;
 
-            // Always use CORS proxy for Yahoo Finance
+            // Try multiple CORS proxies if needed
             const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
-            const proxyUrl = this.corsProxy + encodeURIComponent(url);
+            let lastError = null;
 
-            console.log(`Fetching Yahoo Finance data for ${symbol} via CORS proxy`);
-            const response = await fetch(proxyUrl);
+            for (const proxy of this.corsProxies) {
+                try {
+                    const proxyUrl = proxy + encodeURIComponent(url);
+                    console.log(`Fetching Yahoo Finance data for ${symbol} via ${proxy}`);
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                    const response = await fetch(proxyUrl, {
+                        timeout: 10000 // 10 second timeout
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    data = await response.json();
+                    break; // Success, exit loop
+
+                } catch (error) {
+                    console.warn(`Proxy ${proxy} failed for ${symbol}:`, error.message);
+                    lastError = error;
+                    // Try next proxy
+                }
             }
 
-            data = await response.json();
+            if (!data) {
+                throw lastError || new Error('All CORS proxies failed');
+            }
 
             if (!data.chart || !data.chart.result || !data.chart.result[0]) {
                 throw new Error('Invalid response structure');
@@ -163,18 +187,36 @@ class YahooFinanceService {
         try {
             let data;
 
-            // Always use CORS proxy for Yahoo Finance
+            // Try multiple CORS proxies if needed
             const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`;
-            const proxyUrl = this.corsProxy + encodeURIComponent(url);
+            let lastError = null;
 
-            console.log(`Fetching historical data for ${symbol} (${range}) via CORS proxy`);
-            const response = await fetch(proxyUrl);
+            for (const proxy of this.corsProxies) {
+                try {
+                    const proxyUrl = proxy + encodeURIComponent(url);
+                    console.log(`Fetching historical data for ${symbol} (${range}) via ${proxy}`);
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                    const response = await fetch(proxyUrl, {
+                        timeout: 15000 // 15 second timeout for historical data
+                    });
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    data = await response.json();
+                    break; // Success, exit loop
+
+                } catch (error) {
+                    console.warn(`Proxy ${proxy} failed for historical ${symbol}:`, error.message);
+                    lastError = error;
+                    // Try next proxy
+                }
             }
 
-            data = await response.json();
+            if (!data) {
+                throw lastError || new Error('All CORS proxies failed');
+            }
             
             if (!data.chart || !data.chart.result || !data.chart.result[0]) {
                 throw new Error('Invalid response structure');
