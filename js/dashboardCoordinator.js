@@ -378,71 +378,10 @@ class DashboardCoordinator {
     }
 
     async updateRatesData() {
-        if (!this.services.apiService) return;
-
-        // Rates tab uses FRED API exclusively
-        const fredRateSeries = {
-            '2yr': 'DGS2',           // 2-Year Treasury
-            '5yr': 'DGS5',           // 5-Year Treasury
-            '10yr': 'DGS10',         // 10-Year Treasury
-            '30yr': 'DGS30',         // 30-Year Treasury
-            'sofr': 'SOFR30DAYAVG',  // 30-Day Average SOFR
-            'fedfunds': 'DFEDTARU',  // Fed Funds Target Range Upper
-            'tbill': 'DTB3',         // 3-Month Treasury Bill
-            'highyield': 'BAMLH0A0HYM2' // High Yield Index
-        };
-
-        // Store 2yr and 10yr data for spread calculation
-        let treasury2Data = null;
-        let treasury10Data = null;
-
-        // Fetch all rate data from FRED in parallel
-        const ratePromises = Object.entries(fredRateSeries).map(async ([key, seriesId]) => {
-            try {
-                // Fetch FRED data with appropriate time ranges
-                const isDaily = ['2yr', '5yr', '10yr', '30yr', 'sofr', 'highyield'].includes(key);
-                const limit = isDaily ? 365 : 52; // 365 days or 52 weeks
-                const frequency = isDaily ? 'd' : (key === 'tbill' ? 'w' : 'd');
-
-                const data = await this.services.apiService.getFREDSeries(seriesId, limit, frequency);
-
-                if (data && data.values && data.values.length > 0) {
-                    // Store 2yr and 10yr data for spread calculation
-                    if (key === '2yr') treasury2Data = data;
-                    if (key === '10yr') treasury10Data = data;
-
-                    // Update the rate card with FRED data
-                    if (this.services.dataUpdater) {
-                        this.services.dataUpdater.updateRateChartWithFredData(`${key}-chart`, data.values, data.dates);
-                    }
-                    return { key, success: true, data };
-                }
-
-                return { key, success: false, error: 'No data received' };
-            } catch (error) {
-                console.error(`Error updating FRED series ${seriesId}:`, error);
-                return { key, success: false, error };
-            }
-        });
-
-        // Wait for all updates to complete
-        const results = await Promise.all(ratePromises);
-
-        // Calculate 2s10s spread if we have both treasury data
-        if (treasury2Data && treasury10Data && this.services.apiService.calculate2s10sHistorical) {
-            try {
-                const spreadData = this.services.apiService.calculate2s10sHistorical(treasury2Data, treasury10Data);
-                if (spreadData && this.services.dataUpdater) {
-                    this.services.dataUpdater.updateRateChartWithFredData('spread-chart',
-                        spreadData.values, spreadData.dates);
-                }
-            } catch (error) {
-                console.error('Error calculating 2s10s spread:', error);
-            }
-        }
-
-        const successCount = results.filter(r => r.success).length;
-        console.log(`Rates data updated from FRED: ${successCount}/${Object.keys(fredRateSeries).length} rates`);
+        // DISABLED: Rates are now updated via apiService-v2.updateAllData() in updateEconomicData()
+        // This prevents duplicate/conflicting rate updates that caused different values than markets tab
+        console.log('📊 Rates data now updated via apiService-v2 in updateEconomicData()');
+        return;
     }
 
     async updateBankingData() {

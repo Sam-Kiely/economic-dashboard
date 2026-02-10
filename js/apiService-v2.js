@@ -384,12 +384,15 @@ class APIService {
             await new Promise(resolve => setTimeout(resolve, 500));
 
             // GDP (Already in QoQ Annualized format)
+            console.log('📊 Fetching GDP data for series:', API_CONFIG.FRED.series.gdp);
             const gdpData = await this.getFREDSeries(API_CONFIG.FRED.series.gdp, 8, 'q');
+            console.log('📊 GDP raw data:', gdpData ? `${gdpData.values?.length} values, latest: ${gdpData.values?.[gdpData.values.length-1]}` : 'null');
+
             if (gdpData && gdpData.values.length > 1) {
                 const current = gdpData.values[gdpData.values.length - 1];
                 const previous = gdpData.values[gdpData.values.length - 2];
 
-                updates['gdp-chart'] = {
+                const gdpUpdate = {
                     current: current,
                     change: current - previous,
                     changeType: current > previous ? 'positive' : 'negative',
@@ -399,7 +402,11 @@ class APIService {
                     observationDate: gdpData.dates[gdpData.dates.length - 1],
                     seriesId: 'gdp'
                 };
-                console.log('Updated GDP:', current);
+
+                updates['gdp-chart'] = gdpUpdate;
+                console.log('📊 GDP update created:', gdpUpdate);
+            } else {
+                console.warn('📊 GDP data insufficient:', gdpData);
             }
 
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -714,8 +721,13 @@ class APIService {
             for (const [key, seriesId] of Object.entries(API_CONFIG.FRED.series.h8Data)) {
                 try {
                     console.log(`📊 Fetching H8 data for ${key} (${seriesId})`);
-                    const h8Data = await this.getFREDSeries(seriesId, 13, 'w');
-                    console.log(`📊 H8 ${key} data:`, h8Data ? `${h8Data.values?.length} values` : 'null');
+                    // Try weekly first, fallback to daily if no data
+                    let h8Data = await this.getFREDSeries(seriesId, 13, 'w');
+                    if (!h8Data || h8Data.values.length < 2) {
+                        console.log(`📊 H8 ${key} weekly data insufficient, trying daily...`);
+                        h8Data = await this.getFREDSeries(seriesId, 30);
+                    }
+                    console.log(`📊 H8 ${key} data:`, h8Data ? `${h8Data.values?.length} values, latest: ${h8Data.values?.[h8Data.values.length-1]}` : 'null');
                     if (h8Data && h8Data.values.length > 1) {
                         const current = h8Data.values[h8Data.values.length - 1];
                         const previous = h8Data.values[h8Data.values.length - 2];
