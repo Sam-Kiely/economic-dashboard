@@ -3,9 +3,10 @@ class YahooFinanceService {
     constructor() {
         this.cache = {};
         this.lastFetch = {};
+        this.useVercelAPI = true; // Use Vercel API routes
         this.corsProxy = 'https://corsproxy.io/?';
         this.cacheDuration = 60000; // 1 minute cache for quotes
-        
+
         // Symbol mappings
         this.symbols = {
             // Major Indices (using ETFs as proxies)
@@ -78,18 +79,49 @@ class YahooFinanceService {
         }
 
         try {
-            const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
-            const proxyUrl = this.corsProxy + encodeURIComponent(url);
+            let data;
 
-            console.log(`Fetching Yahoo Finance data for ${symbol}`);
-            const response = await fetch(proxyUrl);
-            
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+            // Try using Vercel API route first
+            if (this.useVercelAPI) {
+                try {
+                    const vercelUrl = `/api/yahoo?symbol=${symbol}`;
+                    console.log(`Fetching Yahoo Finance data via Vercel API: ${symbol}`);
+
+                    const vercelResponse = await fetch(vercelUrl);
+                    if (vercelResponse.ok) {
+                        data = await vercelResponse.json();
+                    } else {
+                        console.warn(`Vercel API failed for ${symbol}, falling back to CORS proxy`);
+                        throw new Error('Vercel API failed, use fallback');
+                    }
+                } catch (vercelError) {
+                    // Fallback to CORS proxy
+                    console.log(`Using CORS proxy for ${symbol} due to:`, vercelError.message);
+                    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
+                    const proxyUrl = this.corsProxy + encodeURIComponent(url);
+
+                    const response = await fetch(proxyUrl);
+
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    data = await response.json();
+                }
+            } else {
+                // Direct CORS proxy if not using Vercel API
+                const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}`;
+                const proxyUrl = this.corsProxy + encodeURIComponent(url);
+
+                const response = await fetch(proxyUrl);
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                data = await response.json();
             }
-            
-            const data = await response.json();
-            
+
             if (!data.chart || !data.chart.result || !data.chart.result[0]) {
                 throw new Error('Invalid response structure');
             }
@@ -523,9 +555,63 @@ class YahooFinanceService {
 
     // Get multiple quotes efficiently
     async getMultipleQuotes(symbols) {
+        // Use batch endpoint if using Vercel API
+        if (this.useVercelAPI && symbols.length > 1) {
+            try {
+                const vercelUrl = `/api/yahoo-batch?symbols=${symbols.join(',')}`;
+                console.log(`Fetching batch Yahoo Finance data via Vercel API for ${symbols.length} symbols`);
+
+                const response = await fetch(vercelUrl);
+                if (response.ok) {
+                    const batchData = await response.json();
+                    const quotes = {};
+
+                    for (const symbol of symbols) {
+                        if (batchData[symbol] && !batchData[symbol].error) {
+                            const data = batchData[symbol];
+                            if (data.chart && data.chart.result && data.chart.result[0]) {
+                                const result = data.chart.result[0];
+                                const meta = result.meta;
+
+                                quotes[symbol] = {
+                                    symbol: symbol,
+                                    price: meta.regularMarketPrice,
+                                    previousClose: meta.previousClose || meta.chartPreviousClose,
+                                    change: meta.regularMarketPrice - (meta.previousClose || meta.chartPreviousClose),
+                                    changePercent: ((meta.regularMarketPrice - (meta.previousClose || meta.chartPreviousClose)) / (meta.previousClose || meta.chartPreviousClose)) * 100,
+                                    volume: meta.regularMarketVolume,
+                                    marketCap: meta.marketCap,
+                                    dayHigh: meta.regularMarketDayHigh,
+                                    dayLow: meta.regularMarketDayLow,
+                                    fiftyTwoWeekHigh: meta.fiftyTwoWeekHigh,
+                                    fiftyTwoWeekLow: meta.fiftyTwoWeekLow,
+                                    timestamp: meta.regularMarketTime
+                                };
+
+                                // Cache individual quotes
+                                const cacheKey = `quote_${symbol}`;
+                                this.cache[cacheKey] = quotes[symbol];
+                                this.lastFetch[cacheKey] = Date.now();
+                            } else {
+                                quotes[symbol] = null;
+                            }
+                        } else {
+                            console.error(`Failed to get quote for ${symbol} in batch`);
+                            quotes[symbol] = null;
+                        }
+                    }
+
+                    return quotes;
+                }
+            } catch (error) {
+                console.warn('Batch API failed, falling back to individual requests:', error.message);
+            }
+        }
+
+        // Fall back to individual requests
         const promises = symbols.map(symbol => this.getQuote(symbol));
         const results = await Promise.allSettled(promises);
-        
+
         const quotes = {};
         results.forEach((result, index) => {
             if (result.status === 'fulfilled' && result.value) {

@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Endpoints Test</title>
+    <style>
+        body { font-family: monospace; padding: 20px; background: #f0f0f0; }
+        .test { margin: 20px 0; padding: 15px; background: white; border-radius: 5px; }
+        .success { border-left: 5px solid #4CAF50; }
+        .error { border-left: 5px solid #f44336; }
+        .pending { border-left: 5px solid #FFC107; }
+        h1 { color: #333; }
+        .result { margin-top: 10px; padding: 10px; background: #f9f9f9; border-radius: 3px; }
+        pre { white-space: pre-wrap; word-wrap: break-word; }
+    </style>
+</head>
+<body>
+    <h1>Testing API Endpoints</h1>
+
+    <div class="test pending" id="fred-test">
+        <h2>FRED API Test</h2>
+        <p>Testing: /api/fred?series=DGS10</p>
+        <div class="result" id="fred-result">Testing...</div>
+    </div>
+
+    <div class="test pending" id="yahoo-test">
+        <h2>Yahoo Finance API Test</h2>
+        <p>Testing: /api/yahoo?symbol=AAPL</p>
+        <div class="result" id="yahoo-result">Testing...</div>
+    </div>
+
+    <div class="test pending" id="yahoo-batch-test">
+        <h2>Yahoo Batch API Test</h2>
+        <p>Testing: /api/yahoo-batch?symbols=AAPL,MSFT,GOOGL</p>
+        <div class="result" id="yahoo-batch-result">Testing...</div>
+    </div>
+
+    <script>
+        async function testFRED() {
+            const testDiv = document.getElementById('fred-test');
+            const resultDiv = document.getElementById('fred-result');
+
+            try {
+                const response = await fetch('/api/fred?series=DGS10&start_date=2024-01-01&end_date=2024-12-31');
+                const data = await response.json();
+
+                if (response.ok && data.observations) {
+                    testDiv.className = 'test success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ Success!</strong><br>
+                        Series: DGS10 (10-Year Treasury)<br>
+                        Observations: ${data.observations.length}<br>
+                        Latest Value: ${data.observations[0]?.value}<br>
+                        Latest Date: ${data.observations[0]?.date}
+                    `;
+                } else {
+                    throw new Error(data.error || 'Invalid response');
+                }
+            } catch (error) {
+                testDiv.className = 'test error';
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        }
+
+        async function testYahoo() {
+            const testDiv = document.getElementById('yahoo-test');
+            const resultDiv = document.getElementById('yahoo-result');
+
+            try {
+                const response = await fetch('/api/yahoo?symbol=AAPL');
+                const data = await response.json();
+
+                if (response.ok && data.chart) {
+                    const meta = data.chart.result[0].meta;
+                    testDiv.className = 'test success';
+                    resultDiv.innerHTML = `
+                        <strong>✅ Success!</strong><br>
+                        Symbol: AAPL<br>
+                        Price: $${meta.regularMarketPrice?.toFixed(2)}<br>
+                        Previous Close: $${meta.previousClose?.toFixed(2)}<br>
+                        Volume: ${(meta.regularMarketVolume / 1000000).toFixed(2)}M
+                    `;
+                } else {
+                    throw new Error(data.error || 'Invalid response');
+                }
+            } catch (error) {
+                testDiv.className = 'test error';
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        }
+
+        async function testYahooBatch() {
+            const testDiv = document.getElementById('yahoo-batch-test');
+            const resultDiv = document.getElementById('yahoo-batch-result');
+
+            try {
+                const response = await fetch('/api/yahoo-batch?symbols=AAPL,MSFT,GOOGL');
+                const data = await response.json();
+
+                if (response.ok) {
+                    const symbols = ['AAPL', 'MSFT', 'GOOGL'];
+                    let successCount = 0;
+                    let results = [];
+
+                    for (const symbol of symbols) {
+                        if (data[symbol] && data[symbol].chart) {
+                            successCount++;
+                            const meta = data[symbol].chart.result[0].meta;
+                            results.push(`${symbol}: $${meta.regularMarketPrice?.toFixed(2)}`);
+                        }
+                    }
+
+                    if (successCount === symbols.length) {
+                        testDiv.className = 'test success';
+                        resultDiv.innerHTML = `
+                            <strong>✅ Success!</strong><br>
+                            Fetched ${successCount}/${symbols.length} symbols<br>
+                            ${results.join('<br>')}
+                        `;
+                    } else {
+                        throw new Error(`Only ${successCount}/${symbols.length} symbols fetched`);
+                    }
+                } else {
+                    throw new Error(data.error || 'Invalid response');
+                }
+            } catch (error) {
+                testDiv.className = 'test error';
+                resultDiv.innerHTML = `<strong>❌ Error:</strong> ${error.message}`;
+            }
+        }
+
+        // Run tests
+        testFRED();
+        testYahoo();
+        testYahooBatch();
+    </script>
+</body>
+</html>

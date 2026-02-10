@@ -1,0 +1,14 @@
+{
+  "name": "economic-dashboard",
+  "version": "1.0.0",
+  "description": "Economic and Market Dashboard with FRED and Yahoo Finance data",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build needed for static site'",
+    "start": "vercel dev"
+  },
+  "dependencies": {},
+  "engines": {
+    "node": ">=14.x"
+  }
+}

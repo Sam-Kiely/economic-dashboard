@@ -3,10 +3,57 @@ class APIService {
     constructor() {
         this.cache = {};
         this.lastFetch = {};
-        // Use a public CORS proxy that works
+        // Use Vercel API routes instead of CORS proxy
+        this.useVercelAPI = true;
+        // Fallback to CORS proxy if Vercel API fails
         this.corsProxy = 'https://corsproxy.io/?';
-        // Always use proxy for external APIs when running locally
-        this.useProxy = true;
+    }
+
+    // Helper method to filter observations by frequency
+    filterByFrequency(observations, frequency) {
+        if (!frequency || frequency === 'd') {
+            return observations; // Return all for daily
+        }
+
+        const filtered = [];
+        let lastDate = null;
+
+        for (const obs of observations) {
+            const currentDate = new Date(obs.date);
+
+            if (!lastDate) {
+                filtered.push(obs);
+                lastDate = currentDate;
+                continue;
+            }
+
+            let shouldInclude = false;
+
+            switch (frequency) {
+                case 'w': // Weekly - at least 7 days apart
+                    shouldInclude = (currentDate - lastDate) >= (7 * 24 * 60 * 60 * 1000);
+                    break;
+                case 'm': // Monthly - different month
+                    shouldInclude = currentDate.getMonth() !== lastDate.getMonth() ||
+                                  currentDate.getFullYear() !== lastDate.getFullYear();
+                    break;
+                case 'q': // Quarterly - at least 3 months apart
+                    const monthDiff = (currentDate.getFullYear() - lastDate.getFullYear()) * 12 +
+                                    (currentDate.getMonth() - lastDate.getMonth());
+                    shouldInclude = monthDiff >= 3;
+                    break;
+                case 'a': // Annual - different year
+                    shouldInclude = currentDate.getFullYear() !== lastDate.getFullYear();
+                    break;
+            }
+
+            if (shouldInclude) {
+                filtered.push(obs);
+                lastDate = currentDate;
+            }
+        }
+
+        return filtered;
     }
 
     // Generic fetch with caching and CORS handling - WITH CORPORATE ENVIRONMENT SUPPORT
@@ -112,14 +159,78 @@ class APIService {
 
     // FRED API Methods
     async getFREDSeries(seriesId, limit = 13, frequency = null, forceRefresh = false) {
+        try {
+            // Try using Vercel API route first
+            if (this.useVercelAPI) {
+                // Calculate date range for limit
+                const endDate = new Date().toISOString().split('T')[0];
+                const startDate = new Date();
+
+                // Calculate start date based on limit and frequency
+                if (frequency === 'd' || !frequency) {
+                    startDate.setDate(startDate.getDate() - (limit * 2)); // Extra buffer for daily data
+                } else if (frequency === 'w') {
+                    startDate.setDate(startDate.getDate() - (limit * 7 * 2));
+                } else if (frequency === 'm') {
+                    startDate.setMonth(startDate.getMonth() - (limit * 2));
+                } else if (frequency === 'q') {
+                    startDate.setMonth(startDate.getMonth() - (limit * 3 * 2));
+                } else if (frequency === 'a') {
+                    startDate.setFullYear(startDate.getFullYear() - (limit * 2));
+                }
+
+                const startDateStr = startDate.toISOString().split('T')[0];
+
+                // Use Vercel API endpoint
+                const vercelUrl = `/api/fred?series=${seriesId}&start_date=${startDateStr}&end_date=${endDate}`;
+                console.log(`Fetching FRED data via Vercel API: ${seriesId}`);
+
+                const response = await fetch(vercelUrl);
+                if (response.ok) {
+                    const data = await response.json();
+
+                    if (data && data.observations && data.observations.length > 0) {
+                        // Filter out any "." values (missing data) and apply frequency filter
+                        let validObservations = data.observations
+                            .filter(obs => obs.value !== '.' && !isNaN(parseFloat(obs.value)));
+
+                        // Apply frequency filtering if specified
+                        if (frequency) {
+                            validObservations = this.filterByFrequency(validObservations, frequency);
+                        }
+
+                        // Sort by date descending and limit
+                        validObservations.sort((a, b) => new Date(b.date) - new Date(a.date));
+                        validObservations = validObservations.slice(0, limit);
+
+                        // Reverse to get chronological order
+                        validObservations.reverse();
+
+                        if (validObservations.length > 0) {
+                            return {
+                                values: validObservations.map(obs => parseFloat(obs.value)),
+                                dates: validObservations.map(obs => obs.date),
+                                seriesId: seriesId
+                            };
+                        }
+                    }
+                } else {
+                    console.warn(`Vercel API failed for ${seriesId}, falling back to direct FRED API with CORS proxy`);
+                }
+            }
+        } catch (vercelError) {
+            console.warn(`Vercel API error for ${seriesId}:`, vercelError.message, 'Falling back to CORS proxy');
+        }
+
+        // Fallback to original CORS proxy method
         // Build URL with optional frequency parameter
         let url = `${API_CONFIG.FRED.baseURL}?series_id=${seriesId}&api_key=${API_CONFIG.FRED.apiKey}&file_type=json&limit=${limit}&sort_order=desc`;
-        
+
         // Add frequency parameter if specified
         if (frequency) {
             url += `&frequency=${frequency}`;
         }
-        
+
         try {
             const cacheKey = `fred_${seriesId}_${frequency || 'default'}`;
             const data = await this.fetchWithCache(url, cacheKey, API_CONFIG.UPDATE_INTERVALS.economic, forceRefresh);
