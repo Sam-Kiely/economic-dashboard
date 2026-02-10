@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Diagnostics</title>
+    <style>
+        body {
+            font-family: monospace;
+            background: #1a1a1a;
+            color: #0f0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #0f0;
+            border-radius: 5px;
+        }
+        .success { color: #0f0; }
+        .error { color: #f00; }
+        .warning { color: #ff0; }
+        .info { color: #0ff; }
+        h2 { color: #fff; }
+        pre {
+            background: #000;
+            padding: 10px;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+        button {
+            background: #0f0;
+            color: #000;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 5px;
+        }
+        button:hover { background: #0c0; }
+    </style>
+</head>
+<body>
+    <h1>Economic Dashboard - Diagnostic Tool</h1>
+    <div class="info">This tool tests all API endpoints and services to identify issues.</div>
+
+    <div class="section">
+        <h2>1. Environment Check</h2>
+        <div id="env-check">Checking environment...</div>
+    </div>
+
+    <div class="section">
+        <h2>2. API Endpoints Test</h2>
+        <button onclick="testAllAPIs()">Run All API Tests</button>
+        <div id="api-tests"></div>
+    </div>
+
+    <div class="section">
+        <h2>3. Service Configuration</h2>
+        <div id="service-config"></div>
+    </div>
+
+    <div class="section">
+        <h2>4. Live Data Test</h2>
+        <button onclick="testLiveData()">Test Live Data Loading</button>
+        <div id="live-data"></div>
+    </div>
+
+    <div class="section">
+        <h2>5. Console Errors</h2>
+        <div id="console-errors"></div>
+    </div>
+
+    <script>
+        // Capture console errors
+        const consoleErrors = [];
+        const originalError = console.error;
+        console.error = function(...args) {
+            consoleErrors.push(args.join(' '));
+            document.getElementById('console-errors').innerHTML =
+                '<pre class="error">' + consoleErrors.join('\n') + '</pre>';
+            originalError.apply(console, args);
+        };
+
+        // Environment check
+        function checkEnvironment() {
+            const envDiv = document.getElementById('env-check');
+            const info = {
+                hostname: window.location.hostname,
+                protocol: window.location.protocol,
+                pathname: window.location.pathname,
+                userAgent: navigator.userAgent,
+                isVercel: window.location.hostname.includes('vercel'),
+                timestamp: new Date().toISOString()
+            };
+
+            envDiv.innerHTML = '<pre>' + JSON.stringify(info, null, 2) + '</pre>';
+        }
+
+        // Test all API endpoints
+        async function testAllAPIs() {
+            const resultsDiv = document.getElementById('api-tests');
+            resultsDiv.innerHTML = '<div class="info">Testing API endpoints...</div>';
+
+            const tests = [
+                {
+                    name: 'FRED API - Unemployment Rate',
+                    url: '/api/fred?series=UNRATE&start_date=2024-01-01&end_date=2026-02-10'
+                },
+                {
+                    name: 'FRED API - GDP',
+                    url: '/api/fred?series=A191RL1Q225SBEA&start_date=2020-01-01&end_date=2026-02-10'
+                },
+                {
+                    name: 'FRED API - H8 CI Loans',
+                    url: '/api/fred?series=TOTCINSA&start_date=2024-01-01&end_date=2026-02-10'
+                },
+                {
+                    name: 'Yahoo Finance - SPY Quote',
+                    url: '/api/yahoo?symbol=SPY'
+                },
+                {
+                    name: 'Yahoo Finance - Historical Data',
+                    url: '/api/yahoo?symbol=SPY&range=1mo&interval=1d'
+                },
+                {
+                    name: 'Yahoo Finance Batch - Multiple Symbols',
+                    url: '/api/yahoo-batch?symbols=SPY,QQQ,DIA'
+                }
+            ];
+
+            let html = '';
+            for (const test of tests) {
+                html += `<div><strong>${test.name}</strong></div>`;
+                try {
+                    const startTime = Date.now();
+                    const response = await fetch(test.url);
+                    const elapsed = Date.now() - startTime;
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        html += `<div class="success">✓ Success (${elapsed}ms) - Status: ${response.status}</div>`;
+
+                        // Show sample of data
+                        let sample = '';
+                        if (data.observations) {
+                            sample = `Observations: ${data.observations.length} records`;
+                        } else if (data.chart) {
+                            sample = `Chart data received for ${data.chart.result[0].meta.symbol}`;
+                        } else {
+                            sample = JSON.stringify(data).substring(0, 200) + '...';
+                        }
+                        html += `<pre>${sample}</pre>`;
+                    } else {
+                        html += `<div class="error">✗ Failed - Status: ${response.status}</div>`;
+                        const text = await response.text();
+                        html += `<pre class="error">${text.substring(0, 500)}</pre>`;
+                    }
+                } catch (error) {
+                    html += `<div class="error">✗ Error: ${error.message}</div>`;
+                }
+                html += '<hr>';
+            }
+
+            resultsDiv.innerHTML = html;
+        }
+
+        // Check service configuration
+        async function checkServiceConfig() {
+            const configDiv = document.getElementById('service-config');
+            let html = '<h3>Checking JavaScript Service Configuration...</h3>';
+
+            try {
+                // Load and check apiService.js
+                const apiResponse = await fetch('/js/apiService.js');
+                const apiText = await apiResponse.text();
+                const useVercelAPI = apiText.includes('this.useVercelAPI = true');
+                const useProxy = apiText.includes('this.useProxy = true');
+
+                html += '<div><strong>apiService.js:</strong></div>';
+                html += `<div class="${useVercelAPI ? 'success' : 'error'}">useVercelAPI: ${useVercelAPI}</div>`;
+                html += `<div class="${!useProxy ? 'success' : 'error'}">useProxy: ${!useProxy}</div>`;
+
+                // Load and check yahooFinanceService.js
+                const yahooResponse = await fetch('/js/yahooFinanceService.js');
+                const yahooText = await yahooResponse.text();
+                const yahooUseVercel = yahooText.includes('this.useVercelAPI = true');
+
+                html += '<div><strong>yahooFinanceService.js:</strong></div>';
+                html += `<div class="${yahooUseVercel ? 'success' : 'error'}">useVercelAPI: ${yahooUseVercel}</div>`;
+
+            } catch (error) {
+                html += `<div class="error">Error checking config: ${error.message}</div>`;
+            }
+
+            configDiv.innerHTML = html;
+        }
+
+        // Test live data loading
+        async function testLiveData() {
+            const dataDiv = document.getElementById('live-data');
+            dataDiv.innerHTML = '<div class="info">Loading services and testing data fetch...</div>';
+
+            let html = '';
+
+            try {
+                // Load config
+                const configScript = document.createElement('script');
+                configScript.src = '/js/config.js';
+                document.head.appendChild(configScript);
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Load apiService
+                const apiScript = document.createElement('script');
+                apiScript.src = '/js/apiService.js';
+                document.head.appendChild(apiScript);
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Test FRED API call
+                if (window.apiService) {
+                    html += '<div class="success">✓ apiService loaded</div>';
+
+                    try {
+                        const fredData = await window.apiService.getFREDSeries('UNRATE', 1);
+                        if (fredData) {
+                            html += '<div class="success">✓ FRED data fetched successfully</div>';
+                            html += `<pre>Unemployment Rate: ${fredData.values[0]}%</pre>`;
+                        } else {
+                            html += '<div class="error">✗ FRED data returned null</div>';
+                        }
+                    } catch (error) {
+                        html += `<div class="error">✗ FRED fetch error: ${error.message}</div>`;
+                    }
+                } else {
+                    html += '<div class="error">✗ apiService not loaded</div>';
+                }
+
+                // Load Yahoo Finance service
+                const yahooScript = document.createElement('script');
+                yahooScript.src = '/js/yahooFinanceService.js';
+                document.head.appendChild(yahooScript);
+
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                if (window.yahooFinance) {
+                    html += '<div class="success">✓ yahooFinance service loaded</div>';
+
+                    try {
+                        const quote = await window.yahooFinance.getQuote('SPY');
+                        if (quote) {
+                            html += '<div class="success">✓ Yahoo Finance data fetched successfully</div>';
+                            html += `<pre>SPY Price: $${quote.price}</pre>`;
+                        } else {
+                            html += '<div class="error">✗ Yahoo Finance data returned null</div>';
+                        }
+                    } catch (error) {
+                        html += `<div class="error">✗ Yahoo fetch error: ${error.message}</div>`;
+                    }
+                } else {
+                    html += '<div class="error">✗ yahooFinance service not loaded</div>';
+                }
+
+            } catch (error) {
+                html += `<div class="error">✗ General error: ${error.message}</div>`;
+            }
+
+            dataDiv.innerHTML = html;
+        }
+
+        // Run initial checks
+        checkEnvironment();
+        checkServiceConfig();
+    </script>
+</body>
+</html>
