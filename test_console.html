@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Console Test</title>
+</head>
+<body>
+    <h1>Check Browser Console</h1>
+    <iframe src="index.html" width="100%" height="600" style="border: 1px solid #ccc;"></iframe>
+    
+    <script>
+        // Capture console messages from iframe
+        window.addEventListener('message', function(e) {
+            console.log('Message from iframe:', e.data);
+        });
+        
+        // Check if running locally
+        setTimeout(() => {
+            const iframe = document.querySelector('iframe');
+            try {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const scripts = iframeDoc.querySelectorAll('script[src]');
+                console.log('Scripts loaded:', scripts.length);
+                
+                // Check for errors
+                iframe.contentWindow.addEventListener('error', (e) => {
+                    console.error('Error in iframe:', e.message, e.filename, e.lineno);
+                });
+            } catch(e) {
+                console.log('Cannot access iframe content (CORS)');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

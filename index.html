@@ -1,0 +1,2368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Economic Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <header class="header">
+        <h1 id="greeting">Economic Dashboard</h1>
+    </header>
+
+    <nav class="nav-tabs">
+        <div class="nav-tab active" onclick="switchTab('economic', this)">Economic Overview</div>
+        <div class="nav-tab" onclick="switchTab('markets', this)">Markets Overview</div>
+        <div class="nav-tab" onclick="switchTab('rates', this)">Rates Overview</div>
+        <div class="nav-tab" onclick="switchTab('banking', this)">Banking Overview</div>
+    </nav>
+
+    <main class="main-content">
+        <!-- Economic Overview Tab - PRESERVED EXACTLY AS IS -->
+        <div id="economic" class="tab-content">
+            <!-- Existing economic content preserved -->
+            <div class="insights-banner">
+                <h2>📊 Economic Overview</h2>
+                <p>Federal Reserve Economic Data (FRED) indicators tracking inflation, growth, employment, and consumer activity. Monitor key metrics that influence monetary policy decisions.</p>
+            </div>
+
+            <h2 class="section-header">Key Economic Indicators</h2>
+            <div class="dashboard-grid">
+                <!-- All existing economic cards preserved as-is -->
+                <!-- Core CPI -->
+                <div class="card" id="coreCPI-card">
+                    <div class="card-header">
+                        <span class="card-title">Core CPI (YoY)</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Core inflation excluding food and energy</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="next-release"></div>
+                    <div class="chart-container">
+                        <canvas id="corecpi-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Core PPI -->
+                <div class="card" id="corePPI-card">
+                    <div class="card-header">
+                        <span class="card-title">Core PPI (YoY)</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Producer prices excluding food and energy</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="next-release"></div>
+                    <div class="chart-container">
+                        <canvas id="coreppi-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Core PCE -->
+                <div class="card" id="corePCE-card">
+                    <div class="card-header">
+                        <span class="card-title">Core PCE (YoY)</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Fed's preferred inflation measure</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="next-release"></div>
+                    <div class="chart-container">
+                        <canvas id="corepce-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- GDP -->
+                <div class="card" id="gdp-card">
+                    <div class="card-header">
+                        <span class="card-title">GDP (QoQ)</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Quarterly economic growth rate, annualized</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="next-release"></div>
+                    <div class="chart-container">
+                        <canvas id="gdp-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Trade Deficit -->
+                <div class="card" id="tradeDeficit-card">
+                    <div class="card-header">
+                        <span class="card-title">Trade Deficit</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Monthly trade balance in billions</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="next-release"></div>
+                    <div class="chart-container">
+                        <canvas id="trade-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Unemployment Rate -->
+                <div class="card" id="unemployment-card">
+                    <div class="card-header">
+                        <span class="card-title">Unemployment Rate</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Percentage of labor force without jobs</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="next-release"></div>
+                    <div class="chart-container">
+                        <canvas id="unemployment-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Initial Jobless Claims -->
+                <div class="card" id="joblessClaims-card">
+                    <div class="card-header">
+                        <span class="card-title">Initial Jobless Claims</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Weekly new unemployment insurance filings</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="next-release"></div>
+                    <div class="chart-container">
+                        <canvas id="jobless-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Retail Sales -->
+                <div class="card" id="retailSales-card">
+                    <div class="card-header">
+                        <span class="card-title">Retail Sales (MoM)</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Monthly change in consumer spending</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="next-release"></div>
+                    <div class="chart-container">
+                        <canvas id="retail-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Durable Goods Orders -->
+                <div class="card" id="durableGoods-card">
+                    <div class="card-header">
+                        <span class="card-title">Durable Goods Orders (MoM)</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Orders for long-lasting manufactured goods</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="next-release"></div>
+                    <div class="chart-container">
+                        <canvas id="durablegoods-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- New Home Sales -->
+                <div class="card" id="newHomeSales-card">
+                    <div class="card-header">
+                        <span class="card-title">New Home Sales</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Monthly new residential construction sales</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="next-release"></div>
+                    <div class="chart-container">
+                        <canvas id="newhomes-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Existing Home Sales -->
+                <div class="card" id="existingHomeSales-card">
+                    <div class="card-header">
+                        <span class="card-title">Existing Home Sales</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Monthly resale home transactions</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="next-release"></div>
+                    <div class="chart-container">
+                        <canvas id="existinghomes-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Consumer Sentiment -->
+                <div class="card" id="consumerSentiment-card">
+                    <div class="card-header">
+                        <span class="card-title">Consumer Sentiment (MoM)</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">University of Michigan confidence index</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="next-release"></div>
+                    <div class="chart-container">
+                        <canvas id="sentiment-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <div class="calendar-section">
+                <div class="calendar-header">
+                    <h3>Economic Calendar</h3>
+                    <div class="time-selector">
+                        <span class="time-option">Today</span>
+                        <span class="time-option active">This Week</span>
+                        <span class="time-option">Next Week</span>
+                        <span class="time-option">This Month</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Markets Overview Tab - PRESERVED AS IS -->
+        <div id="markets" class="tab-content" style="display: none;">
+            <!-- Existing markets content preserved -->
+            <div class="insights-banner">
+                <h2>📈 Market Overview</h2>
+                <p id="market-summary-text">Real-time equity indices, commodities, and cryptocurrency prices. Track major market movements across asset classes during trading hours.</p>
+            </div>
+
+            <h2 class="section-header">Equity Markets</h2>
+            <div class="dashboard-grid">
+                <!-- S&P 500 -->
+                <div class="card" id="sp500-market-card">
+                    <div class="card-header">
+                        <span class="card-title">S&P 500</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="period-returns">
+                        <div class="return-item">
+                            <span class="return-label">1W:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1M:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">YTD:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">3Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">5Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="sp500-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Dow Jones -->
+                <div class="card" id="dow-market-card">
+                    <div class="card-header">
+                        <span class="card-title">Dow Jones</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="period-returns">
+                        <div class="return-item">
+                            <span class="return-label">1W:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1M:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">YTD:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">3Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">5Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="dow-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- NASDAQ -->
+                <div class="card" id="nasdaq-market-card">
+                    <div class="card-header">
+                        <span class="card-title">NASDAQ Composite</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="period-returns">
+                        <div class="return-item">
+                            <span class="return-label">1W:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1M:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">YTD:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">3Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">5Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="nasdaq-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- VIX -->
+                <div class="card" id="vix-market-card">
+                    <div class="card-header">
+                        <span class="card-title">Volatility Index (VIX)</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="period-returns">
+                        <div class="return-item">
+                            <span class="return-label">1W:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1M:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">YTD:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">3Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">5Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="vix-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="section-header">Commodities & Crypto</h2>
+            <div class="dashboard-grid">
+                <!-- Gold -->
+                <div class="card" id="gold-market-card">
+                    <div class="card-header">
+                        <span class="card-title">Gold</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="period-returns">
+                        <div class="return-item">
+                            <span class="return-label">1W:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1M:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">YTD:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">3Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">5Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="gold-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Crude Oil -->
+                <div class="card" id="oil-market-card">
+                    <div class="card-header">
+                        <span class="card-title">Crude Oil (WTI)</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="period-returns">
+                        <div class="return-item">
+                            <span class="return-label">1W:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1M:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">YTD:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">3Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">5Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="oil-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- DXY -->
+                <div class="card" id="dxy-market-card">
+                    <div class="card-header">
+                        <span class="card-title">US Dollar Index (DXY)</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="period-returns">
+                        <div class="return-item">
+                            <span class="return-label">1W:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1M:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">YTD:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">3Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">5Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="dxy-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Bitcoin -->
+                <div class="card" id="bitcoin-market-card">
+                    <div class="card-header">
+                        <span class="card-title">Bitcoin</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <div class="period-returns">
+                        <div class="return-item">
+                            <span class="return-label">1W:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1M:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">YTD:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">3Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">5Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="bitcoin-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rates Overview Tab - PRESERVED AS IS -->
+        <div id="rates" class="tab-content" style="display: none;">
+            <!-- Existing rates content preserved -->
+            <div class="insights-banner">
+                <h2>📉 Rates Overview</h2>
+                <p>Treasury yields, federal funds rate, and credit spreads from Federal Reserve data sources. Monitor interest rate trends and yield curve dynamics.</p>
+            </div>
+
+            <h2 class="section-header">Interest Rates</h2>
+            <div class="dashboard-grid">
+                <!-- 1M SOFR -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">1M Term SOFR</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <p class="card-description">Short-term funding rate</p>
+                    <div class="chart-container">
+                        <canvas id="sofr-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 3-Month T-Bill -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">3-Month T-Bill</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <p class="card-description">Short-term treasury bill</p>
+                    <div class="chart-container">
+                        <canvas id="tbill-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 2-Year Treasury -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">2-Year Treasury</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <p class="card-description">Short-term government yield</p>
+                    <div class="chart-container">
+                        <canvas id="2yr-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 5-Year Treasury -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">5-Year Treasury</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <p class="card-description">Mid-term Treasury yield</p>
+                    <div class="period-returns">
+                        <div class="return-item">
+                            <span class="return-label">1W:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1M:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">YTD:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">1Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">3Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                        <div class="return-item">
+                            <span class="return-label">5Y:</span>
+                            <span class="return-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="5yr-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 10-Year Treasury -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">10-Year Treasury</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <p class="card-description">Benchmark long-term yield</p>
+                    <div class="chart-container">
+                        <canvas id="10yr-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 30-Year Treasury -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">30-Year Treasury</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <p class="card-description">Long-term government yield</p>
+                    <div class="chart-container">
+                        <canvas id="30yr-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- 2s10s Spread -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">2s10s Spread</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <p class="card-description">Yield curve indicator</p>
+                    <div class="chart-container">
+                        <canvas id="spread-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Fed Funds Rate -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">Fed Funds Target</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <p class="card-description">Federal Reserve policy rate</p>
+                    <div class="chart-container">
+                        <canvas id="fedfunds-chart"></canvas>
+                    </div>
+                </div>
+
+
+                <!-- High Yield Index -->
+                <div class="card">
+                    <div class="card-header">
+                        <span class="card-title">BofA High Yield Index Spread</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading
+                    </span>
+                    <p class="card-description">ICE BofA US High Yield</p>
+                    <div class="chart-container">
+                        <canvas id="highyield-chart"></canvas>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <!-- NEW Banking Overview Tab -->
+        <div id="banking" class="tab-content" style="display: none;">
+            <div class="insights-banner">
+                <h2>🏦 Banking Overview</h2>
+                <p>Federal Reserve H.8 data and peer bank performance comparison. Focus on commercial banking trends and TCBI relative performance.</p>
+            </div>
+
+            <h2 class="section-header">Federal Reserve H.8 - Loan Data (Domestically Chartered Commercial Banks, NSA)</h2>
+            <div class="dashboard-grid">
+                <!-- Commercial & Industrial Loans -->
+                <div class="card" id="ci-loans-card">
+                    <div class="card-header">
+                        <span class="card-title">Commercial & Industrial Loans</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Business loans for operations and capital</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading WoW
+                    </span>
+                    <div class="banking-period-changes">
+                        <div class="period-item">
+                            <span class="period-label">QTD:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                        <div class="period-item">
+                            <span class="period-label">YoY Qtr:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="ciloans-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Commercial Real Estate Loans -->
+                <div class="card" id="cre-loans-card">
+                    <div class="card-header">
+                        <span class="card-title">Commercial Real Estate Loans</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Loans secured by commercial properties</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading WoW
+                    </span>
+                    <div class="banking-period-changes">
+                        <div class="period-item">
+                            <span class="period-label">QTD:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                        <div class="period-item">
+                            <span class="period-label">YoY Qtr:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="creloans-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Consumer Loans -->
+                <div class="card" id="consumer-loans-card">
+                    <div class="card-header">
+                        <span class="card-title">Consumer Loans</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Credit cards, auto loans, personal loans</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading WoW
+                    </span>
+                    <div class="banking-period-changes">
+                        <div class="period-item">
+                            <span class="period-label">QTD:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                        <div class="period-item">
+                            <span class="period-label">YoY Qtr:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="consumerloans-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Other Loans and Leases -->
+                <div class="card" id="other-loans-card">
+                    <div class="card-header">
+                        <span class="card-title">Other Loans and Leases</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">All other loan categories and leases</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading WoW
+                    </span>
+                    <div class="banking-period-changes">
+                        <div class="period-item">
+                            <span class="period-label">QTD:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                        <div class="period-item">
+                            <span class="period-label">YoY Qtr:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="otherloans-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Total Loans and Leases -->
+                <div class="card" id="total-loans-card">
+                    <div class="card-header">
+                        <span class="card-title">Total Loans and Leases</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Total bank credit loans and leases</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading WoW
+                    </span>
+                    <div class="banking-period-changes">
+                        <div class="period-item">
+                            <span class="period-label">QTD:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                        <div class="period-item">
+                            <span class="period-label">YoY Qtr:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="totalloans-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="section-header">Federal Reserve H.8 - Liability Data (Domestically Chartered Commercial Banks, NSA)</h2>
+            <div class="dashboard-grid">
+                <!-- Deposits -->
+                <div class="card" id="deposits-card">
+                    <div class="card-header">
+                        <span class="card-title">Deposits</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Total deposit liabilities</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading WoW
+                    </span>
+                    <div class="banking-period-changes">
+                        <div class="period-item">
+                            <span class="period-label">QTD:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                        <div class="period-item">
+                            <span class="period-label">YoY Qtr:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="deposits-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Large Time Deposits -->
+                <div class="card" id="large-time-deposits-card">
+                    <div class="card-header">
+                        <span class="card-title">Large Time Deposits</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Time deposits over $250K</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading WoW
+                    </span>
+                    <div class="banking-period-changes">
+                        <div class="period-item">
+                            <span class="period-label">QTD:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                        <div class="period-item">
+                            <span class="period-label">YoY Qtr:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="largetime-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Other Deposits -->
+                <div class="card" id="other-deposits-card">
+                    <div class="card-header">
+                        <span class="card-title">Other Deposits</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Other deposit liabilities</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading WoW
+                    </span>
+                    <div class="banking-period-changes">
+                        <div class="period-item">
+                            <span class="period-label">QTD:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                        <div class="period-item">
+                            <span class="period-label">YoY Qtr:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="otherdeposits-chart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Borrowings -->
+                <div class="card" id="borrowings-card">
+                    <div class="card-header">
+                        <span class="card-title">Borrowings</span>
+                        <span class="card-date"></span>
+                    </div>
+                    <p class="card-definition">Total borrowed funds</p>
+                    <div class="card-value">--</div>
+                    <span class="card-change neutral">
+                        <span>—</span> Loading WoW
+                    </span>
+                    <div class="banking-period-changes">
+                        <div class="period-item">
+                            <span class="period-label">QTD:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                        <div class="period-item">
+                            <span class="period-label">YoY Qtr:</span>
+                            <span class="period-value">--</span>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="borrowings-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <h2 class="section-header">Regional Bank Peer Performance Comparison</h2>
+            <div class="table-container">
+                <div class="table-header-info">
+                    Ranked by 1-week performance • TCBI highlighted in blue • KRX index in grey
+                </div>
+                <table class="peer-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Ticker</th>
+                            <th>Current Price</th>
+                            <th>1-Day</th>
+                            <th class="sorted">1-Week</th>
+                            <th>YTD</th>
+                            <th>1-Year</th>
+                            <th>3-Year</th>
+                            <th>5-Year</th>
+                        </tr>
+                    </thead>
+                    <tbody id="peer-table-body">
+                        <!-- Dynamically populated -->
+                    </tbody>
+                </table>
+                <div class="sort-note">
+                    Table sorted by 1-week performance in descending order
+                </div>
+            </div>
+
+            <!-- Notes Section -->
+            <div class="notes-section">
+                <h4>Data Notes:</h4>
+                <ul>
+                    <li>H.8 data represents domestically chartered commercial banks, not seasonally adjusted (NSA)</li>
+                    <li>Monthly values shown use the most recent weekly H.8 release from the Federal Reserve</li>
+                    <li>Charts display 12 months of weekly data using the last week of each month</li>
+                    <li>Dollar changes and percentage changes both shown for H.8 metrics</li>
+                    <li>QTD comparisons: Latest weekly release vs last week of previous quarter</li>
+                    <li>YoY QTD comparisons: Latest weekly release vs same period in prior year quarter</li>
+                    <li>Peer banks ranked by 1-week performance with TCBI and KRX highlighted</li>
+                    <li>All price changes calculated using adjusted closing prices</li>
+                </ul>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <p>Last updated: <span id="lastUpdate">--</span></p>
+        <p>Data provided by FRED and Yahoo Finance</p>
+    </footer>
+
+    <!-- Scripts in exact specified order -->
+    <!-- 1. config.js -->
+    <script src="js/config.js" onload="console.log('✅ 1. Config loaded')" onerror="console.error('❌ 1. Config failed to load')"></script>
+    
+    <!-- 2. chartUtils.js -->
+    <script src="js/chartUtils.js" onload="console.log('✅ 2. Chart Utils loaded')" onerror="console.error('❌ 2. Chart Utils failed to load')"></script>
+    
+    <!-- 3. loadingManager.js -->
+    <script src="js/loadingManager.js" onload="console.log('✅ 3. Loading Manager loaded')" onerror="console.error('❌ 3. Loading Manager failed to load')"></script>
+    
+    <!-- 4. apiService.js -->
+    <script src="js/apiService.js" onload="console.log('✅ 4. API Service loaded')" onerror="console.error('❌ 4. API Service failed to load')"></script>
+    
+    <!-- 5. script.js -->
+    <script src="js/script.js" onload="console.log('✅ 5. Main Script loaded')" onerror="console.error('❌ 5. Main Script failed to load')"></script>
+    
+    <!-- 6. dataUpdater.js -->
+    <script src="js/dataUpdater.js" onload="console.log('✅ 6. Data Updater loaded')" onerror="console.error('❌ 6. Data Updater failed to load')"></script>
+    
+    <!-- 7. chartConfig.js -->
+    <script src="js/chartConfig.js" onload="console.log('✅ 7. Chart Config loaded')" onerror="console.error('❌ 7. Chart Config failed to load')"></script>
+    
+    <!-- 8. calendarService.js -->
+    <script src="js/calendarService.js" onload="console.log('✅ 8. Calendar Service loaded')" onerror="console.error('❌ 8. Calendar Service failed to load')"></script>
+    
+    <!-- 9. economicInsightsService.js -->
+    <script src="js/economicInsightsService.js" onload="console.log('✅ 9. Economic Insights Service loaded')" onerror="console.error('❌ 9. Economic Insights Service failed to load')"></script>
+    
+    
+    <!-- 11. bankingService.js -->
+    <script src="js/bankingService.js" onload="console.log('✅ 11. Banking Service loaded')" onerror="console.error('❌ 11. Banking Service failed to load')"></script>
+
+    <!-- 12. periodValidationUtility.js -->
+    <script src="js/periodValidationUtility.js" onload="console.log('✅ 12. Period Validation Utility loaded')" onerror="console.error('❌ 12. Period Validation Utility failed to load')"></script>
+
+    <!-- 13. errorFixVerification.js -->
+    <script src="js/errorFixVerification.js" onload="console.log('✅ 13. Error Fix Verification loaded')" onerror="console.error('❌ 13. Error Fix Verification failed to load')"></script>
+
+    <!-- 13.1. Corporate Security Support -->
+    <script src="js/networkManager.js" onload="console.log('✅ 13.1. Network Manager loaded')" onerror="console.error('❌ 13.1. Network Manager failed to load')"></script>
+    <script src="js/corporateFallbackData.js" onload="console.log('✅ 13.2. Corporate Fallback Data loaded')" onerror="console.error('❌ 13.2. Corporate Fallback Data failed to load')"></script>
+
+    <!-- 14. yahooFinanceService.js -->
+    <script src="js/yahooFinanceService.js" onload="console.log('✅ 14. Yahoo Finance Service loaded')" onerror="console.error('❌ 14. Yahoo Finance Service failed to load')"></script>
+    
+    
+    <!-- 15. dashboardCoordinator.js -->
+    <script src="js/dashboardCoordinator.js" onload="console.log('✅ 15. Dashboard Coordinator loaded'); window.dashboardCoordinatorLoaded = true;" onerror="console.log('ℹ️ 15. Dashboard Coordinator not found (optional)'); window.dashboardCoordinatorLoaded = false;"></script>
+    <script src="js/rateChartRewrite.js" onload="console.log('✅ 17. Rate Chart Rewrite loaded')" onerror="console.error('❌ 17. Rate Chart Rewrite failed to load')"></script>
+    
+    <!-- 7. Service Verification and Fallback Loading System -->
+    <script id="service-verification">
+        // Service availability tracker
+        window.serviceLoadTracker = {
+            loadedServices: [],
+            failedServices: [],
+            startTime: Date.now(),
+            
+            // Define all expected services and their checks
+            expectedServices: {
+                // Required services
+                'CONFIG': { check: () => window.API_CONFIG, required: true, description: 'Configuration' },
+                'chartUtils': { check: () => window.chartUtils, required: true, description: 'Chart Utilities' },
+                'LoadingManager': { check: () => window.LoadingManager, required: true, description: 'Loading Manager' },
+                'apiService': { check: () => window.apiService, required: true, description: 'API Service' },
+                'yahooFinance': { check: () => window.yahooFinance, required: true, description: 'Yahoo Finance Service' },
+                
+                // Optional services
+                'CalendarService': { check: () => window.CalendarService, required: false, description: 'Calendar Service' },
+                'EconomicInsightsService': { check: () => window.EconomicInsightsService, required: false, description: 'Economic Insights Service' },
+                'BankingService': { check: () => window.BankingService, required: false, description: 'Banking Service' },
+                'dataUpdater': { check: () => window.dataUpdater, required: false, description: 'Data Updater' },
+                'ChartConfig': { check: () => window.ChartConfig, required: false, description: 'Chart Config' },
+                'DashboardCoordinator': { check: () => window.DashboardCoordinator, required: false, description: 'Dashboard Coordinator' }
+            },
+            
+            checkServices() {
+                const results = {
+                    loaded: [],
+                    missing: [],
+                    optional: []
+                };
+                
+                for (const [serviceName, config] of Object.entries(this.expectedServices)) {
+                    const isAvailable = config.check();
+                    
+                    if (isAvailable) {
+                        results.loaded.push({ name: serviceName, description: config.description });
+                        if (!this.loadedServices.includes(serviceName)) {
+                            this.loadedServices.push(serviceName);
+                        }
+                    } else if (config.required) {
+                        results.missing.push({ name: serviceName, description: config.description });
+                        if (!this.failedServices.includes(serviceName)) {
+                            this.failedServices.push(serviceName);
+                        }
+                    } else {
+                        results.optional.push({ name: serviceName, description: config.description });
+                    }
+                }
+                
+                return results;
+            },
+            
+            generateReport() {
+                const results = this.checkServices();
+                const loadTime = Date.now() - this.startTime;
+                
+                console.log('\n📊 SERVICE LOADING REPORT');
+                console.log('=' .repeat(50));
+                console.log(`⏱️ Load Time: ${loadTime}ms`);
+                console.log(`✅ Loaded Services (${results.loaded.length}):`);
+                results.loaded.forEach(service => {
+                    console.log(`   • ${service.description} (${service.name})`);
+                });
+                
+                if (results.missing.length > 0) {
+                    console.log(`❌ Missing Required Services (${results.missing.length}):`);
+                    results.missing.forEach(service => {
+                        console.error(`   • ${service.description} (${service.name})`);
+                    });
+                }
+                
+                if (results.optional.length > 0) {
+                    console.log(`⚠️ Optional Services Not Available (${results.optional.length}):`);
+                    results.optional.forEach(service => {
+                        console.warn(`   • ${service.description} (${service.name})`);
+                    });
+                }
+                
+                console.log('=' .repeat(50));
+                
+                return results;
+            },
+            
+            // Fallback loading system
+            async loadMissingServices(missingServices) {
+                console.log('🔄 Attempting to load missing services...');
+                const fallbackPromises = [];
+                
+                for (const service of missingServices) {
+                    const fallbackPromise = this.loadServiceWithFallback(service.name);
+                    fallbackPromises.push(fallbackPromise);
+                }
+                
+                const results = await Promise.allSettled(fallbackPromises);
+                let successCount = 0;
+                
+                results.forEach((result, index) => {
+                    if (result.status === 'fulfilled' && result.value) {
+                        successCount++;
+                        console.log(`✅ Successfully loaded ${missingServices[index].description}`);
+                    } else {
+                        console.error(`❌ Failed to load ${missingServices[index].description}`);
+                    }
+                });
+                
+                return successCount;
+            },
+            
+            async loadServiceWithFallback(serviceName) {
+                return new Promise((resolve) => {
+                    // Try loading for up to 3 seconds with multiple attempts
+                    const maxAttempts = 6;
+                    const attemptInterval = 500;
+                    let attempts = 0;
+                    
+                    const checkInterval = setInterval(() => {
+                        attempts++;
+                        const serviceConfig = this.expectedServices[serviceName];
+                        
+                        if (serviceConfig && serviceConfig.check()) {
+                            clearInterval(checkInterval);
+                            resolve(true);
+                            return;
+                        }
+                        
+                        if (attempts >= maxAttempts) {
+                            clearInterval(checkInterval);
+                            resolve(false);
+                        }
+                    }, attemptInterval);
+                });
+            }
+        };
+        
+        // Log initial service verification start - positioned after all 16 scripts
+        console.log('🔍 Service verification system initialized - ready to check all 16 loaded scripts');
+    </script>
+    
+    <!-- COMMENTED OUT: Enhanced Market Data Integration - Now handled by individual service files -->
+    <!--
+    <script>
+        // Dedicated function for creating monthly labels from date arrays
+        function getMonthlyLabels(dates) {
+            const labels = [];
+            let lastMonth = -1;
+            for(let i = 0; i < dates.length; i++) {
+                const date = new Date(dates[i]);
+                const month = date.getMonth();
+                if(i === dates.length - 1 || (i < dates.length - 1 && new Date(dates[i+1]).getMonth() !== month)) {
+                    labels.push(date.toLocaleDateString('en-US', {month: 'short', year: '2-digit'}).replace(' ', " '"));
+                } else {
+                    labels.push('');
+                }
+            }
+            return labels;
+        }
+
+        // Market data updater using Yahoo Finance with correct tickers
+        class MarketDataUpdater {
+            constructor() {
+                this.updateInProgress = false;
+                this.updateInterval = 60000; // Update every minute during market hours
+                this.marketCharts = {};
+                this.fullDatesArray = {}; // Store all dates for tooltips
+                this.fullPricesArray = {}; // Store all prices for each chart
+            }
+
+            // Debug function to trace data flow
+            async debugDataFlow(symbol) {
+                console.log('🔍 debugDataFlow: Fetching', symbol);
+                const data = await window.yahooFinance.getHistoricalData(symbol, '1y', '1d');
+                console.log('🔍 debugDataFlow: Received days:', data?.dates?.length);
+                console.log('🔍 debugDataFlow: Received prices:', data?.prices?.length);
+                if (data?.dates?.length) {
+                    console.log('🔍 debugDataFlow: Date range:', data.dates[0], 'to', data.dates[data.dates.length - 1]);
+                }
+                return data;
+            }
+
+            // Helper function to find card by title text
+            findCardByTitle(titleText) {
+                const cards = document.querySelectorAll('.card');
+                for (const card of cards) {
+                    const titleElement = card.querySelector('.card-title');
+                    if (titleElement && titleElement.textContent.includes(titleText)) {
+                        return card;
+                    }
+                }
+                return null;
+            }
+
+            // Create chart configuration using standardized chartUtils
+            createChartConfig(isRatesChart = false, chartType = '') {
+                const isVix = chartType === 'vix';
+                const isGold = chartType === 'gold';
+                const isBitcoin = chartType === 'bitcoin';
+                
+                // Determine value type for formatting
+                let valueType = 'currency';
+                if (isVix) valueType = 'index';
+                else if (isRatesChart) valueType = 'rate';
+                else if (isBitcoin || isGold) valueType = 'currency';
+                
+                // Get standardized tooltip configuration
+                const tooltipConfig = window.chartUtils ? 
+                    window.chartUtils.getTooltipConfig(valueType, 'MM/DD/YY') : 
+                    this.getFallbackTooltipConfig(isRatesChart, chartType);
+                
+                // Get standardized axis configurations
+                const xAxisConfig = window.chartUtils ? 
+                    window.chartUtils.getXAxisConfig([], 'monthly') :
+                    this.getFallbackXAxisConfig();
+                    
+                const yAxisConfig = window.chartUtils ?
+                    window.chartUtils.getYAxisConfig(valueType, []) :
+                    this.getFallbackYAxisConfig(isRatesChart, chartType);
+                
+                return {
+                    type: 'line',
+                    data: {
+                        labels: [],
+                        originalDates: [], // Store original dates for tooltips
+                        datasets: [{
+                            data: [],
+                            borderColor: '#2196F3',
+                            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+                            tension: 0.4,
+                            pointRadius: 0,
+                            pointHoverRadius: 4,
+                            borderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        interaction: {
+                            mode: 'index',
+                            intersect: false
+                        },
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: tooltipConfig
+                        },
+                        scales: {
+                            x: xAxisConfig,
+                            y: yAxisConfig
+                        }
+                    }
+                };
+            }
+            
+            // Fallback tooltip configuration for older browsers
+            getFallbackTooltipConfig(isRatesChart, chartType) {
+                const isVix = chartType === 'vix';
+                const isGold = chartType === 'gold';
+                const isBitcoin = chartType === 'bitcoin';
+                
+                return {
+                    mode: 'index',
+                    intersect: false,
+                    callbacks: {
+                        title: function(context) {
+                            const chartId = context[0].chart.canvas.id;
+                            const index = context[0].dataIndex;
+                            const updater = window.marketDataUpdater || this;
+                            
+                            if (updater.fullDatesArray && updater.fullDatesArray[chartId]) {
+                                const date = new Date(updater.fullDatesArray[chartId][index]);
+                                const month = String(date.getMonth() + 1).padStart(2, '0');
+                                const day = String(date.getDate()).padStart(2, '0');
+                                const year = String(date.getFullYear()).slice(-2);
+                                return `${month}/${day}/${year}`;
+                            }
+                            return context[0].label;
+                        },
+                        label: function(context) {
+                            const value = context.parsed.y;
+                            if (isVix) {
+                                return value.toFixed(2);
+                            } else if (isRatesChart) {
+                                return value.toFixed(2) + '%';
+                            } else if (isGold || isBitcoin) {
+                                return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                            } else {
+                                return '$' + value.toFixed(2);
+                            }
+                        }
+                    }
+                };
+            }
+            
+            // Fallback x-axis configuration
+            getFallbackXAxisConfig() {
+                return {
+                    display: true,
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 10 },
+                        maxRotation: 45,
+                        minRotation: 45,
+                        autoSkip: false,
+                        maxTicksLimit: 13,
+                        callback: function(value, index, values) {
+                            const label = this.getLabelForValue(value);
+                            if (label && label.includes(' ')) {
+                                return label;
+                            }
+                            return '';
+                        }
+                    }
+                };
+            }
+            
+            // Fallback y-axis configuration
+            getFallbackYAxisConfig(isRatesChart, chartType) {
+                const isVix = chartType === 'vix';
+                const isGold = chartType === 'gold';
+                const isBitcoin = chartType === 'bitcoin';
+                
+                return {
+                    display: true,
+                    grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                    ticks: {
+                        font: { size: 10 },
+                        callback: function(value) {
+                            if (isVix) {
+                                return value.toFixed(0);
+                            } else if (isRatesChart) {
+                                return value.toFixed(1) + '%';
+                            } else if (isBitcoin) {
+                                return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            } else if (isGold) {
+                                return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+                            } else {
+                                return '$' + value.toFixed(0);
+                            }
+                        }
+                    }
+                };
+            }
+
+            // Initialize market charts
+            initMarketCharts() {
+                const marketChartConfigs = [
+                    { id: 'sp500-chart', type: 'equity' },
+                    { id: 'dow-chart', type: 'equity' },
+                    { id: 'nasdaq-chart', type: 'equity' },
+                    { id: 'vix-chart', type: 'vix' },
+                    { id: 'gold-chart', type: 'gold' },
+                    { id: 'oil-chart', type: 'commodity' },
+                    { id: 'dxy-chart', type: 'currency' },
+                    { id: 'bitcoin-chart', type: 'bitcoin' }
+                ];
+
+                marketChartConfigs.forEach(config => {
+                    const canvas = document.getElementById(config.id);
+                    if (canvas && !canvas.chart) {
+                        canvas.chart = new Chart(canvas, this.createChartConfig(false, config.type));
+                        this.marketCharts[config.id] = canvas.chart;
+                        
+                        // Initialize date arrays
+                        this.fullDatesArray[config.id] = [];
+                        this.fullPricesArray[config.id] = [];
+                    }
+                });
+            }
+
+            // Initialize rates charts with proper formatting
+            initRatesCharts() {
+                const ratesChartIds = [
+                    'sofr-chart', '2yr-chart', '10yr-chart', '30yr-chart',
+                    'fedfunds-chart', 'tbill-chart', 
+                    'highyield-chart', 'spread-chart'
+                ];
+
+                ratesChartIds.forEach(chartId => {
+                    const canvas = document.getElementById(chartId);
+                    if (canvas && !canvas.chart) {
+                        canvas.chart = new Chart(canvas, this.createChartConfig(true, 'rates'));
+                        this.marketCharts[chartId] = canvas.chart;
+                        
+                        // Initialize date arrays
+                        this.fullDatesArray[chartId] = [];
+                        this.fullPricesArray[chartId] = [];
+                    }
+                });
+            }
+
+            // Format date using same logic as apiService.formatDate() for consistency
+            formatDate(dateString) {
+                // Parse date string explicitly to avoid timezone issues
+                const parts = dateString.split('-');
+                const year = parseInt(parts[0]);
+                const month = parseInt(parts[1]) - 1; // JavaScript months are 0-indexed
+                const day = parseInt(parts[2]);
+                const date = new Date(year, month, day);
+                
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                
+                // For monthly data: same as apiService logic
+                const monthName = months[month];
+                const yearShort = year.toString().substr(2);
+                return `${monthName} '${yearShort}`;
+            }
+
+            // Process dates and labels using monthly spacing for 1 year of daily data
+            processChartData(dates, prices) {
+                if (!dates || !prices || dates.length === 0) return { labels: [], data: [] };
+                
+                console.log('📊 processChartData(): Processing chart data for monthly labels:', { dateCount: dates.length, priceCount: prices.length });
+                
+                // Create labels array with same length as dates array
+                const processedLabels = new Array(dates.length);
+                let monthlyLabelsCount = 0;
+                
+                // Process each date to determine if it's the last trading day of the month
+                for (let i = 0; i < dates.length; i++) {
+                    const currentDate = new Date(dates[i]);
+                    const currentMonth = currentDate.getMonth();
+                    const currentYear = currentDate.getFullYear();
+                    
+                    // Check if this is the last occurrence of this month/year combination
+                    let isLastInMonth = true;
+                    for (let j = i + 1; j < dates.length; j++) {
+                        const nextDate = new Date(dates[j]);
+                        if (nextDate.getMonth() === currentMonth && nextDate.getFullYear() === currentYear) {
+                            isLastInMonth = false;
+                            break;
+                        }
+                    }
+                    
+                    if (isLastInMonth) {
+                        // This is the last trading day of the month - create visible label
+                        const monthName = currentDate.toLocaleDateString('en-US', { month: 'short' });
+                        const yearShort = currentDate.getFullYear().toString().slice(-2);
+                        const monthLabel = `${monthName} '${yearShort}`;
+                        processedLabels[i] = monthLabel;
+                        monthlyLabelsCount++;
+                        
+                        if (monthlyLabelsCount <= 3) {
+                            console.log(`   Month End ${monthlyLabelsCount}: ${dates[i]} -> ${monthLabel}`);
+                        }
+                    } else {
+                        // Not month end - use empty string to hide label but preserve data point
+                        processedLabels[i] = '';
+                    }
+                }
+                
+                console.log(`✅ processChartData(): Generated ${monthlyLabelsCount} month-end labels for ${dates.length} data points`);
+                console.log(`✅ processChartData(): Labels array length: ${processedLabels.length}, Data array length: ${prices.length} (ARRAYS MATCH)`);
+                
+                return { 
+                    labels: processedLabels, 
+                    data: prices,
+                    monthlyCount: monthlyLabelsCount 
+                };
+            }
+
+            // Enhanced chart data processing specifically for monthly labels on markets
+            processChartDataWithMonthlyLabels(dates, prices) {
+                if (!dates || !prices || dates.length === 0) return { labels: [], data: [] };
+                
+                console.log('📊 Processing chart data for monthly labels:', { dateCount: dates.length, priceCount: prices.length });
+                
+                const processedLabels = [];
+                let monthlyLabelsCount = 0;
+                
+                // First pass: identify the last trading day of each month
+                const monthEndIndices = new Set();
+                
+                for (let i = 0; i < dates.length; i++) {
+                    const currentDate = new Date(dates[i]);
+                    const currentMonth = currentDate.getMonth();
+                    const currentYear = currentDate.getFullYear();
+                    
+                    // Check if this is the last occurrence of this month/year combination
+                    let isLastInMonth = true;
+                    for (let j = i + 1; j < dates.length; j++) {
+                        const nextDate = new Date(dates[j]);
+                        if (nextDate.getMonth() === currentMonth && nextDate.getFullYear() === currentYear) {
+                            isLastInMonth = false;
+                            break;
+                        }
+                    }
+                    
+                    if (isLastInMonth) {
+                        monthEndIndices.add(i);
+                    }
+                }
+                
+                // Second pass: create labels array
+                dates.forEach((dateStr, index) => {
+                    if (monthEndIndices.has(index)) {
+                        const date = new Date(dateStr);
+                        const monthName = date.toLocaleDateString('en-US', { month: 'short' });
+                        const yearShort = date.getFullYear().toString().slice(-2);
+                        const monthLabel = `${monthName} '${yearShort}`;
+                        processedLabels.push(monthLabel);
+                        monthlyLabelsCount++;
+                        
+                        if (monthlyLabelsCount <= 3) {
+                            console.log(`   Month End ${monthlyLabelsCount}: ${dateStr} -> ${monthLabel}`);
+                        }
+                    } else {
+                        // Empty string for non-month-end dates
+                        processedLabels.push('');
+                    }
+                });
+                
+                console.log(`✅ Generated ${monthlyLabelsCount} month-end labels for ${dates.length} data points`);
+                
+                return { 
+                    labels: processedLabels, 
+                    data: prices,
+                    monthlyCount: monthlyLabelsCount 
+                };
+            }
+
+            // Update market card
+            updateMarketCard(cardId, symbol, data) {
+                const card = document.getElementById(cardId);
+                if (!card) return;
+
+                // Update value
+                const valueElement = card.querySelector('.card-value');
+                if (valueElement && data.price !== undefined) {
+                    if (symbol === 'bitcoin') {
+                        valueElement.textContent = '$' + data.price.toLocaleString('en-US', {
+                            minimumFractionDigits: 0,
+                            maximumFractionDigits: 0
+                        });
+                    } else if (symbol === 'vix') {
+                        valueElement.textContent = data.price.toFixed(2);
+                    } else if (symbol === 'gold' || cardId.includes('gold')) {
+                        // Add comma formatting for gold
+                        valueElement.textContent = '$' + data.price.toLocaleString('en-US', {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2
+                        });
+                    } else {
+                        valueElement.textContent = '$' + data.price.toFixed(2);
+                    }
+                }
+
+                // Update change with 1D label
+                const changeElement = card.querySelector('.card-change');
+                if (changeElement && data.changePercent !== undefined) {
+                    const changeType = data.changePercent >= 0 ? 'positive' : 'negative';
+                    changeElement.className = 'card-change ' + changeType;
+                    const arrow = data.changePercent >= 0 ? '▲' : '▼';
+                    changeElement.innerHTML = '1D: ' + arrow + ' ' + Math.abs(data.changePercent).toFixed(2) + '%';
+                }
+
+                // Period returns are now handled by dedicated FRED/Yahoo Finance data updaters
+                // No need for manual period-returns updating here
+
+                // Update chart with 1-year daily data (monthly labels)
+                const chartId = cardId.replace('-market-card', '-chart');
+                if (data.historicalData && this.marketCharts[chartId]) {
+                    console.log(`📊 updateMarketCard(${cardId}): Received ${data.historicalData.dates?.length || 0} dates and ${data.historicalData.prices?.length || 0} prices`);
+                    
+                    // Store full dates for tooltips 
+                    this.fullDatesArray[chartId] = data.historicalData.dates || [];
+                    this.fullPricesArray[chartId] = data.historicalData.prices || [];
+                    
+                    // Store original dates in chart data for tooltips
+                    this.marketCharts[chartId].data.originalDates = data.historicalData.dates || [];
+                    
+                    // Use processChartData to handle 1 year of data with monthly labels
+                    const allDates = data.historicalData.dates || [];
+                    const allPrices = data.historicalData.prices || [];
+                    
+                    console.log(`📊 updateMarketCard(${cardId}): Processing ${allDates.length} data points with monthly labels`);
+                    
+                    // Process chart data with monthly labels - keep all ~252 data points but only show 13 labels
+                    const processedData = this.processChartData(allDates, allPrices);
+                    
+                    console.log(`📊 updateMarketCard(${cardId}): Processed to ${processedData.data?.length || 0} data points with ${processedData.monthlyCount || 0} monthly labels`);
+                    
+                    this.marketCharts[chartId].data.labels = processedData.labels;
+                    this.marketCharts[chartId].data.datasets[0].data = processedData.data;
+                    
+                    // Update x-axis configuration to show 13 monthly labels
+                    if (this.marketCharts[chartId].options && this.marketCharts[chartId].options.scales && this.marketCharts[chartId].options.scales.x) {
+                        this.marketCharts[chartId].options.scales.x.ticks = {
+                            ...this.marketCharts[chartId].options.scales.x.ticks,
+                            maxTicksLimit: 13,
+                            callback: function(value, index, values) {
+                                const label = this.getLabelForValue(value);
+                                // Only show non-empty labels (monthly markers)
+                                return label && label.trim() !== '' ? label : '';
+                            }
+                        };
+                    }
+                    
+                    // Set color based on performance (VIX inverted - red when up)
+                    const isPositive = symbol === 'vix' ? data.changePercent < 0 : data.changePercent >= 0;
+                    this.marketCharts[chartId].data.datasets[0].borderColor = isPositive ? '#4CAF50' : '#F44336';
+                    this.marketCharts[chartId].data.datasets[0].backgroundColor = isPositive ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)';
+                    
+                    this.marketCharts[chartId].update();
+                }
+            }
+
+            // Update rate card with period returns (FIXED)
+            updateRateCard(cardId, data) {
+                // Find the card element using the helper function
+                let card = null;
+                const searchTitle = cardId.replace('-rate-card', '').replace(/^\d/, '');
+                
+                // Map cardId to actual title text
+                const titleMap = {
+                    '2yr': '2-Year Treasury',
+                    '10yr': '10-Year Treasury',
+                    '30yr': '30-Year Treasury',
+                    'sofr': '1M Term SOFR',
+                    'fedfunds': 'Fed Funds Target',
+                    'tbill': '3-Month T-Bill',
+                    'highyield': 'High Yield Index'
+                };
+                
+                const titleToFind = titleMap[searchTitle] || searchTitle;
+                card = this.findCardByTitle(titleToFind);
+                
+                if (!card) {
+                    // Try to find by chart ID
+                    const chartId = cardId.replace('-rate-card', '') + '-chart';
+                    const canvas = document.getElementById(chartId);
+                    if (canvas) {
+                        card = canvas.closest('.card');
+                    }
+                }
+                
+                if (!card) return;
+
+                // Remove next-release element if it exists (rates are market data, not releases)
+                const nextReleaseElement = card.querySelector('.next-release');
+                if (nextReleaseElement) {
+                    nextReleaseElement.remove();
+                }
+
+                // Update value
+                const valueElement = card.querySelector('.card-value');
+                if (valueElement && data.price !== undefined) {
+                    valueElement.textContent = data.price.toFixed(2) + '%';
+                }
+
+                // Update change with 1D label
+                const changeElement = card.querySelector('.card-change');
+                if (changeElement && data.changePercent !== undefined) {
+                    // For rates, up is typically negative (higher rates = bad for bonds)
+                    const changeType = data.changePercent >= 0 ? 'negative' : 'positive';
+                    changeElement.className = 'card-change ' + changeType;
+                    const arrow = data.changePercent >= 0 ? '▲' : '▼';
+                    const bpsChange = Math.abs(data.changePercent * 10).toFixed(0); // Convert to basis points
+                    changeElement.innerHTML = '1D: ' + arrow + ' ' + bpsChange + ' bps';
+                }
+
+                // Add period returns if they don't exist
+                let returnContainer = card.querySelector('.period-returns');
+                if (!returnContainer && data.returns) {
+                    returnContainer = document.createElement('div');
+                    returnContainer.className = 'period-returns';
+                    
+                    // Insert after card-change or card-description
+                    const insertAfter = card.querySelector('.card-change') || card.querySelector('.card-description');
+                    if (insertAfter) {
+                        insertAfter.insertAdjacentElement('afterend', returnContainer);
+                    }
+                    
+                    // Create return items
+                    const periods = ['1W', '1M', 'YTD', '1Y', '3Y', '5Y'];
+                    periods.forEach(period => {
+                        const item = document.createElement('div');
+                        item.className = 'return-item';
+                        item.innerHTML = `
+                            <span class="return-label">${period}:</span>
+                            <span class="return-value">--</span>
+                        `;
+                        returnContainer.appendChild(item);
+                    });
+                }
+
+                // Update period returns with extended data (1W, 1M, YTD, 1Y, 3Y, 5Y)
+                if (returnContainer && (data.extendedReturns || data.returns)) {
+                    const returnsData = data.extendedReturns || data.returns;
+                    const returnElements = returnContainer.querySelectorAll('.return-value');
+                    const periods = ['1W', '1M', 'YTD', '1Y', '3Y', '5Y'];
+                    
+                    periods.forEach((period, index) => {
+                        if (returnElements[index] && returnsData[period] !== undefined) {
+                            const value = returnsData[period];
+                            // For rates, convert percentage change to basis points (multiply by 100)
+                            const bpsValue = Math.abs(value * 100).toFixed(0);
+                            returnElements[index].textContent = (value >= 0 ? '+' : '-') + bpsValue + ' bps';
+                            // For rates, positive returns mean rates went up (typically negative for investors)
+                            returnElements[index].className = 'return-value ' + (value >= 0 ? 'negative' : 'positive');
+                        }
+                    });
+                }
+
+                // Update chart with monthly label formatting (1 year daily data)
+                const chartId = cardId.replace('-rate-card', '') + '-chart';
+                const canvas = document.getElementById(chartId);
+                
+                if (data.historicalData && canvas && canvas.chart) {
+                    // Store full dates for tooltips
+                    this.fullDatesArray[chartId] = data.historicalData.dates || [];
+                    this.fullPricesArray[chartId] = data.historicalData.prices || [];
+                    
+                    // Store original dates in chart data for tooltips
+                    canvas.chart.data.originalDates = data.historicalData.dates || [];
+                    
+                    // Use 1 year of daily data with monthly labels (same as market charts)
+                    let fullDates = data.historicalData.dates || [];
+                    let fullPrices = data.historicalData.prices || [];
+                    
+                    // Process chart data with monthly labels - keep all ~252 data points but only show 13 labels
+                    const processedData = this.processChartData(fullDates, fullPrices);
+                    
+                    canvas.chart.data.labels = processedData.labels;
+                    canvas.chart.data.datasets[0].data = processedData.data;
+                    
+                    // Set color based on rate change (inverted - up is typically negative)
+                    const isPositive = data.changePercent < 0;
+                    canvas.chart.data.datasets[0].borderColor = isPositive ? '#4CAF50' : '#F44336';
+                    canvas.chart.data.datasets[0].backgroundColor = isPositive ? 'rgba(76, 175, 80, 0.1)' : 'rgba(244, 67, 54, 0.1)';
+                    
+                    canvas.chart.update();
+                }
+            }
+
+            // Update all markets with 1-year data
+            async updateMarkets() {
+                if (this.updateInProgress) return;
+                this.updateInProgress = true;
+
+                try {
+                    console.log('Updating market data via Yahoo Finance (1 year)...');
+                    
+                    // Updated symbols with correct tickers
+                    const marketSymbols = {
+                        'sp500-market-card': 'SPY',      // Keep as ETF
+                        'dow-market-card': 'DIA',        // Keep as ETF
+                        'nasdaq-market-card': 'QQQ',     // Keep as ETF
+                        'vix-market-card': '^VIX',       // VIX index
+                        'gold-market-card': 'GC=F',      // Gold futures
+                        'oil-market-card': 'CL=F',       // WTI Crude Oil futures
+                        'dxy-market-card': 'DX-Y.NYB',   // Dollar Index
+                        'bitcoin-market-card': 'BTC-USD' // Bitcoin from Yahoo
+                    };
+
+                    // Fetch data for each symbol
+                    for (const [cardId, symbol] of Object.entries(marketSymbols)) {
+                        try {
+                            // Get quote
+                            const quote = await window.yahooFinance.getQuote(symbol);
+                            
+                            // Get 1 year of historical data for charts (using debug function)
+                            console.log(`📊 updateMarkets(): Fetching 1 year of data for ${symbol}`);
+                            const historical = await this.debugDataFlow(symbol);
+                            console.log(`📊 updateMarkets(): Received ${historical?.dates?.length || 0} dates and ${historical?.prices?.length || 0} prices for ${symbol}`);
+                            
+                            // Get extended returns with weekend/holiday handling
+                            const extendedReturns = await window.yahooFinance.getExtendedReturns(symbol);
+                            
+                            if (quote) {
+                                const marketData = {
+                                    price: quote.price,
+                                    changePercent: quote.changePercent,
+                                    returns: historical?.returns || {},
+                                    extendedReturns: extendedReturns,
+                                    historicalData: historical || {}
+                                };
+                                
+                                // Determine symbol type for formatting
+                                let symbolType = symbol.toLowerCase();
+                                if (symbol === 'BTC-USD') symbolType = 'bitcoin';
+                                if (symbol === '^VIX') symbolType = 'vix';
+                                if (symbol === 'GC=F') symbolType = 'gold';
+                                
+                                this.updateMarketCard(cardId, symbolType, marketData);
+                            }
+                            
+                            // Small delay between requests
+                            await new Promise(resolve => setTimeout(resolve, 200));
+                        } catch (error) {
+                            console.error('Error updating ' + symbol + ':', error);
+                        }
+                    }
+                    
+                    // Update market summary - DISABLED: Now using static descriptive text
+                    // this.updateMarketSummary();
+                    
+                    // Update last updated time
+                    this.updateLastUpdatedTime();
+                    
+                } catch (error) {
+                    console.error('Error updating markets:', error);
+                } finally {
+                    this.updateInProgress = false;
+                }
+            }
+
+            // REMOVED: Old Yahoo Finance rates update
+            // Rates are now updated via FRED API in dashboardCoordinator.updateRatesData()
+            async updateRates() {
+                console.log('📊 Rates data is now updated via FRED API in dashboardCoordinator');
+                // This method is kept as a stub for backward compatibility
+                // Yahoo Finance symbols removed - using FRED data sources:
+                // 2yr: DGS2, 10yr: DGS10, 30yr: DGS30, tbill: DTB3
+            }
+
+            // REMOVED: Old Yahoo Finance 2s10s spread calculation
+            // Spread is now calculated from FRED data in dashboardCoordinator
+            async calculate2s10sSpreadFromYahoo() {
+                console.log('📊 2s10s spread is now calculated from FRED data in dashboardCoordinator');
+                // This method is kept as a stub for backward compatibility
+            }
+
+            // Calculate and update 2s10s spread (FIXED)
+            update2s10sSpread() {
+                // Find cards using the helper function
+                const twoYearCard = this.findCardByTitle('2-Year Treasury');
+                const tenYearCard = this.findCardByTitle('10-Year Treasury');
+                
+                if (twoYearCard && tenYearCard) {
+                    const twoYearValue = parseFloat(twoYearCard.querySelector('.card-value')?.textContent) || 0;
+                    const tenYearValue = parseFloat(tenYearCard.querySelector('.card-value')?.textContent) || 0;
+                    
+                    if (twoYearValue && tenYearValue) {
+                        const spread = (tenYearValue - twoYearValue) * 100; // Convert to basis points
+                        
+                        // Update spread card
+                        const spreadCard = this.findCardByTitle('2s10s Spread');
+                        if (spreadCard) {
+                            const valueElement = spreadCard.querySelector('.card-value');
+                            if (valueElement) {
+                                valueElement.textContent = (spread >= 0 ? '+' : '') + spread.toFixed(0) + ' bps';
+                            }
+                            
+                            // Update color based on whether spread is positive or inverted
+                            const changeElement = spreadCard.querySelector('.card-change');
+                            if (changeElement) {
+                                changeElement.className = 'card-change ' + (spread >= 0 ? 'positive' : 'negative');
+                                changeElement.innerHTML = spread >= 0 ? 
+                                    '<span>Normal</span> Steepening curve' : 
+                                    '<span>Inverted</span> Recession signal';
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Update rates summary text (FIXED)
+            updateRatesSummary() {
+                const summaryElement = document.querySelector('#rates .insights-banner p');
+                if (summaryElement) {
+                    // Get current spread value
+                    const spreadCard = this.findCardByTitle('2s10s Spread');
+                    let spreadValue = 0;
+                    if (spreadCard) {
+                        const valueText = spreadCard.querySelector('.card-value')?.textContent || '0';
+                        spreadValue = parseFloat(valueText);
+                    }
+                    
+                    let summary = '';
+                    if (spreadValue < 0) {
+                        summary = 'Yield curve remains inverted, signaling recession concerns. Markets price gradual Fed easing as economy slows.';
+                    } else if (spreadValue > 0 && spreadValue < 50) {
+                        summary = 'Yield curve normalizing as Fed policy evolves. Markets balancing growth optimism with inflation vigilance.';
+                    } else {
+                        summary = 'Steepening yield curve reflects growth expectations. Long-term rates rise on fiscal concerns and term premium.';
+                    }
+                    
+                    summaryElement.textContent = summary;
+                }
+            }
+
+            // Update market summary text
+            updateMarketSummary() {
+                const summaryElement = document.getElementById('market-summary-text');
+                if (summaryElement) {
+                    // Could enhance this with actual market analysis
+                    const hour = new Date().getHours();
+                    let summary = '';
+                    
+                    if (hour >= 9 && hour < 16) {
+                        summary = 'Markets trading actively. Tech sector showing strength while energy consolidates.';
+                    } else if (hour >= 16 && hour < 20) {
+                        summary = 'Markets closed. After-hours trading shows continued momentum in major indices.';
+                    } else {
+                        summary = 'Futures indicate positive open. Asian markets higher overnight.';
+                    }
+                    
+                    summaryElement.textContent = summary;
+                }
+            }
+
+            // Update last updated time
+            updateLastUpdatedTime() {
+                const now = new Date();
+                const timeString = now.toLocaleString('en-US', {
+                    timeZone: 'America/New_York',
+                    hour12: true,
+                    weekday: 'short',
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+                
+                const lastUpdateElement = document.getElementById('lastUpdate');
+                if (lastUpdateElement) {
+                    lastUpdateElement.textContent = timeString + ' ET';
+                }
+            }
+
+            // Check if markets are open
+            isMarketOpen() {
+                const now = new Date();
+                const day = now.getDay();
+                const hour = now.getHours();
+                const minute = now.getMinutes();
+                const currentTime = hour * 60 + minute;
+                
+                // Markets closed on weekends
+                if (day === 0 || day === 6) return false;
+                
+                // Market hours: 9:30 AM - 4:00 PM ET
+                const marketOpen = 9 * 60 + 30;
+                const marketClose = 16 * 60;
+                
+                return currentTime >= marketOpen && currentTime < marketClose;
+            }
+
+            // Start auto-update
+            startAutoUpdate() {
+                // Initial update
+                this.updateMarkets();
+                this.updateRates();
+                
+                // Set up periodic updates
+                setInterval(() => {
+                    // Update more frequently during market hours
+                    if (this.isMarketOpen()) {
+                        this.updateMarkets();
+                        this.updateRates();
+                    }
+                }, this.updateInterval);
+                
+                // Update every 5 minutes regardless
+                setInterval(() => {
+                    this.updateMarkets();
+                    this.updateRates();
+                }, 300000);
+            }
+        }
+
+        // Enhanced Dashboard Initialization System
+        class DashboardInitializer {
+            constructor() {
+                this.requiredServices = [
+                    { name: 'config', check: () => window.API_CONFIG, description: 'Configuration' },
+                    { name: 'chartUtils', check: () => window.chartUtils, description: 'Chart Utilities' },
+                    { name: 'loadingManager', check: () => window.LoadingManager, description: 'Loading Manager' },
+                    { name: 'apiService', check: () => window.apiService, description: 'API Service' },
+                    { name: 'yahooFinance', check: () => window.yahooFinance, description: 'Yahoo Finance Service' }
+                ];
+                this.optionalServices = [
+                    { name: 'calendarService', check: () => window.CalendarService, description: 'Calendar Service' },
+                    { name: 'economicInsights', check: () => window.EconomicInsightsService, description: 'Economic Insights Service' },
+                    { name: 'bankingService', check: () => window.BankingService, description: 'Banking Service' },
+                    { name: 'dashboardCoordinator', check: () => window.DashboardCoordinator, description: 'Dashboard Coordinator' }
+                ];
+                this.initializationCallbacks = [];
+            }
+
+            addInitializationCallback(callback, priority = 0) {
+                this.initializationCallbacks.push({ callback, priority });
+                this.initializationCallbacks.sort((a, b) => b.priority - a.priority);
+            }
+
+            checkServices() {
+                console.log('🔍 Checking required services...');
+                const missingServices = [];
+                const loadedServices = [];
+
+                this.requiredServices.forEach(service => {
+                    if (service.check()) {
+                        loadedServices.push(service.name);
+                        console.log(`✅ ${service.description} loaded`);
+                    } else {
+                        missingServices.push(service.name);
+                        console.error(`❌ ${service.description} missing`);
+                    }
+                });
+
+                console.log('🔍 Checking optional services...');
+                this.optionalServices.forEach(service => {
+                    if (service.check()) {
+                        loadedServices.push(service.name);
+                        console.log(`✅ ${service.description} loaded`);
+                    } else {
+                        console.warn(`⚠️ ${service.description} not available`);
+                    }
+                });
+
+                return { missingServices, loadedServices };
+            }
+
+            async waitForServices(maxWait = 5000) {
+                const startTime = Date.now();
+                let servicesReady = false;
+
+                while (!servicesReady && (Date.now() - startTime) < maxWait) {
+                    const { missingServices } = this.checkServices();
+                    servicesReady = missingServices.length === 0;
+                    
+                    if (!servicesReady) {
+                        console.log(`⏳ Waiting for services: ${missingServices.join(', ')}`);
+                        await new Promise(resolve => setTimeout(resolve, 100));
+                    }
+                }
+
+                return servicesReady;
+            }
+
+            async initializeDashboard() {
+                console.log('🚀 Starting dashboard initialization...');
+                
+                const servicesReady = await this.waitForServices();
+                
+                if (!servicesReady) {
+                    console.error('💥 Dashboard initialization failed - required services not loaded');
+                    this.showError('Failed to load required services. Please refresh the page.');
+                    return false;
+                }
+
+                console.log('✅ All required services loaded, proceeding with initialization');
+
+                try {
+                    // Use coordinator if available, otherwise fallback to inline initialization
+                    if (window.DashboardCoordinator) {
+                        console.log('🎯 Using Dashboard Coordinator for initialization');
+                        const coordinator = new window.DashboardCoordinator();
+                        await coordinator.initialize();
+                        console.log('✅ Dashboard Coordinator initialization completed');
+                    } else {
+                        console.log('🎯 Using inline initialization (no coordinator found)');
+                        await this.fallbackInitialization();
+                        console.log('✅ Inline initialization completed');
+                    }
+
+                    // Run additional initialization callbacks
+                    for (const { callback } of this.initializationCallbacks) {
+                        try {
+                            await callback();
+                        } catch (error) {
+                            console.error('❌ Initialization callback failed:', error);
+                        }
+                    }
+
+                    console.log('🎉 Dashboard initialization completed successfully');
+                    return true;
+                } catch (error) {
+                    console.error('💥 Dashboard initialization error:', error);
+                    this.showError('Dashboard initialization failed. Please refresh the page.');
+                    return false;
+                }
+            }
+
+            async fallbackInitialization() {
+                console.log('📋 Running fallback initialization sequence...');
+
+                // Initialize insights if available
+                if (window.EconomicInsightsService) {
+                    window.economicInsights = new EconomicInsightsService();
+                    console.log('✅ Economic Insights initialized');
+                }
+
+                // Initialize market data updater
+                if (typeof MarketDataUpdater !== 'undefined') {
+                    const marketUpdater = new MarketDataUpdater();
+                    window.marketDataUpdater = marketUpdater;
+                    
+                    // Initialize charts
+                    await new Promise(resolve => setTimeout(resolve, 500)); // Brief delay for DOM readiness
+                    marketUpdater.initMarketCharts();
+                    marketUpdater.initRatesCharts();
+                    
+                    // Start auto-update if Yahoo Finance is available
+                    if (window.yahooFinance) {
+                        marketUpdater.startAutoUpdate();
+                        console.log('✅ Market data updater initialized with auto-update');
+                    } else {
+                        console.warn('⚠️ Yahoo Finance service not available - market updates disabled');
+                    }
+                }
+
+                // Initialize time updater
+                this.initializeTimeUpdater();
+            }
+
+            initializeTimeUpdater() {
+                const updateTime = () => {
+                    const now = new Date();
+                    const timeString = now.toLocaleString('en-US', { 
+                        timeZone: 'America/New_York',
+                        hour12: true,
+                        weekday: 'short',
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                    const lastUpdateElement = document.getElementById('lastUpdate');
+                    if (lastUpdateElement) {
+                        lastUpdateElement.textContent = timeString + ' ET';
+                    }
+                };
+
+                updateTime();
+                setInterval(updateTime, 60000);
+                console.log('✅ Time updater initialized');
+            }
+
+            showError(message) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #f44336;
+                    color: white;
+                    padding: 16px;
+                    border-radius: 4px;
+                    z-index: 10000;
+                    max-width: 300px;
+                    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+                `;
+                errorDiv.textContent = message;
+                document.body.appendChild(errorDiv);
+                
+                setTimeout(() => {
+                    if (errorDiv.parentNode) {
+                        errorDiv.parentNode.removeChild(errorDiv);
+                    }
+                }, 10000);
+            }
+        }
+    -->
+    
+    <!-- Essential Initialization - Runs after all scripts are loaded -->
+    <script>
+        // Simplified initialization with timing controls and service verification
+        document.addEventListener('DOMContentLoaded', async () => {
+            console.log('📄 DOM loaded, waiting 2.5 seconds for all scripts to load...');
+            
+            // Wait 2.5 seconds after DOMContentLoaded to ensure all services are available
+            await new Promise(resolve => setTimeout(resolve, 2500));
+            
+            console.log('⏰ Script loading grace period complete, checking services...');
+            
+            // Run service verification
+            if (window.serviceLoadTracker) {
+                const initialReport = window.serviceLoadTracker.generateReport();
+                
+                // If we have missing required services, try fallback loading
+                if (initialReport.missing.length > 0) {
+                    console.log('🔄 Missing required services detected, attempting fallback loading...');
+                    await window.serviceLoadTracker.loadMissingServices(initialReport.missing);
+                    
+                    // Final verification report
+                    setTimeout(() => {
+                        console.log('🏁 FINAL SERVICE STATUS:');
+                        window.serviceLoadTracker.generateReport();
+                    }, 1000);
+                }
+                
+                console.log('✅ Service verification complete');
+            } else {
+                console.warn('⚠️ Service verification system not available');
+            }
+            
+            // Initialize dashboard using coordinator if available
+            console.log('🚀 Starting dashboard initialization...');
+            
+            if (window.DashboardCoordinator) {
+                console.log('🎯 Using Dashboard Coordinator for initialization');
+                const coordinator = new window.DashboardCoordinator();
+                await coordinator.initialize();
+                console.log('✅ Dashboard Coordinator initialization completed');
+            } else {
+                console.log('🎯 Using individual service initialization');
+                // Services will initialize themselves via their own registration callbacks
+            }
+            
+            // Mark dashboard as ready
+            console.log('🎉 Dashboard initialization completed');
+            document.body.classList.add('dashboard-ready');
+        });
+        
+        // Helper function to show critical errors
+        function showCriticalError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: #f44336;
+                color: white;
+                padding: 24px;
+                border-radius: 8px;
+                z-index: 10001;
+                max-width: 400px;
+                text-align: center;
+                box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+                font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            `;
+            errorDiv.innerHTML = `
+                <h3 style="margin: 0 0 16px 0;">⚠️ Loading Error</h3>
+                <p style="margin: 0 0 16px 0;">${message}</p>
+                <button onclick="location.reload()" style="
+                    background: white;
+                    color: #f44336;
+                    border: none;
+                    padding: 8px 16px;
+                    border-radius: 4px;
+                    cursor: pointer;
+                    font-weight: bold;
+                ">Refresh Page</button>
+            `;
+            document.body.appendChild(errorDiv);
+        }
+    </script>
+</body>
+</html>

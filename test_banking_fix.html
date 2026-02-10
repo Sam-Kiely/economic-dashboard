@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Banking Fix Test</title>
+    <script>
+        // Test function to check banking card elements
+        function testBankingCards() {
+            console.log('🧪 Testing banking cards...');
+
+            const cardIds = [
+                'ci-loans-card', 'cre-loans-card', 'consumer-loans-card',
+                'other-loans-card', 'total-loans-card', 'deposits-card',
+                'large-time-deposits-card', 'other-deposits-card', 'borrowings-card'
+            ];
+
+            let missingCards = [];
+            let foundCards = [];
+
+            cardIds.forEach(cardId => {
+                const card = document.getElementById(cardId);
+                if (card) {
+                    foundCards.push(cardId);
+                    console.log(`✅ Found card: ${cardId}`);
+                } else {
+                    missingCards.push(cardId);
+                    console.error(`❌ Missing card: ${cardId}`);
+                }
+            });
+
+            console.log(`📊 Results: ${foundCards.length}/${cardIds.length} cards found`);
+            if (missingCards.length > 0) {
+                console.error('Missing cards:', missingCards);
+            }
+
+            // Test if banking service is available
+            if (window.bankingService) {
+                console.log('✅ Banking service is available');
+                console.log('Banking service status:', {
+                    initialized: !window.bankingService.initializeInProgress,
+                    hasH8Data: Object.keys(window.bankingService.h8Data || {}).length > 0,
+                    hasPeerData: (window.bankingService.peerData || []).length > 0
+                });
+            } else {
+                console.error('❌ Banking service not available');
+            }
+
+            return {
+                foundCards: foundCards.length,
+                totalCards: cardIds.length,
+                missingCards,
+                bankingServiceAvailable: !!window.bankingService
+            };
+        }
+
+        // Run test when page loads
+        window.addEventListener('load', () => {
+            setTimeout(testBankingCards, 2000); // Wait 2 seconds for services to initialize
+        });
+    </script>
+</head>
+<body>
+    <h1>Banking Fix Test</h1>
+    <p>Check the console for test results.</p>
+    <button onclick="testBankingCards()">Run Test Again</button>
+
+    <!-- Include the main application to test -->
+    <iframe src="index.html" width="100%" height="600px"></iframe>
+</body>
+</html>

@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Alignment Debugger</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .debug-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            border-bottom: 2px solid #3498db;
+            padding-bottom: 10px;
+        }
+        .debug-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .debug-table th {
+            background: #3498db;
+            color: white;
+            padding: 10px;
+            text-align: left;
+        }
+        .debug-table td {
+            padding: 8px;
+            border-bottom: 1px solid #ddd;
+        }
+        .debug-table tr:hover {
+            background: #f8f9fa;
+        }
+        .indicator-name {
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .date-raw {
+            font-family: monospace;
+            background: #f0f0f0;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+        .date-formatted {
+            color: #27ae60;
+            font-weight: 500;
+        }
+        .value {
+            color: #e74c3c;
+            font-weight: 600;
+        }
+        .alignment-check {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .alignment-correct {
+            background: #d4edda;
+            color: #155724;
+        }
+        .alignment-incorrect {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        .refresh-btn {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 20px 0;
+        }
+        .refresh-btn:hover {
+            background: #2980b9;
+        }
+        .status-message {
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+        .status-loading {
+            background: #fff3cd;
+            color: #856404;
+        }
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .status-error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+    </style>
+</head>
+<body>
+    <div class="debug-container">
+        <h1>📊 Date Alignment Debugger</h1>
+        <p>This tool helps verify that chart dates correctly align with their data values.</p>
+        
+        <button class="refresh-btn" onclick="runDebugCheck()">Run Debug Check</button>
+        
+        <div id="status" class="status-message status-loading" style="display: none;">
+            Fetching data and checking alignment...
+        </div>
+        
+        <table class="debug-table" id="debugTable" style="display: none;">
+            <thead>
+                <tr>
+                    <th>Indicator</th>
+                    <th>Raw Date</th>
+                    <th>Formatted Date</th>
+                    <th>Value</th>
+                    <th>Period Type</th>
+                    <th>Alignment Check</th>
+                </tr>
+            </thead>
+            <tbody id="debugBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/apiService.js"></script>
+    <script>
+        async function runDebugCheck() {
+            const statusEl = document.getElementById('status');
+            const tableEl = document.getElementById('debugTable');
+            const bodyEl = document.getElementById('debugBody');
+            
+            statusEl.style.display = 'block';
+            statusEl.className = 'status-message status-loading';
+            statusEl.textContent = 'Fetching data and checking alignment...';
+            tableEl.style.display = 'none';
+            bodyEl.innerHTML = '';
+            
+            try {
+                // Check if apiService exists
+                if (!window.apiService) {
+                    throw new Error('API Service not initialized. Please ensure apiService.js is loaded.');
+                }
+                
+                // Fetch fresh data
+                const updates = await window.apiService.updateAllData();
+                
+                // Process each indicator
+                const debugData = [];
+                
+                for (const [key, data] of Object.entries(updates)) {
+                    if (data.dates && data.historicalData && data.dates.length > 0) {
+                        const lastIndex = data.dates.length - 1;
+                        const rawDate = data.observationDate || 'N/A';
+                        const formattedDate = data.dates[lastIndex];
+                        const value = data.current;
+                        
+                        // Determine period type
+                        let periodType = 'Monthly';
+                        if (key.includes('gdp')) periodType = 'Quarterly';
+                        if (key.includes('jobless')) periodType = 'Weekly';
+                        
+                        // Check alignment
+                        const alignment = checkDateAlignment(key, rawDate, formattedDate, value);
+                        
+                        debugData.push({
+                            indicator: key.replace('-chart', ''),
+                            rawDate: rawDate,
+                            formattedDate: formattedDate,
+                            value: formatValue(key, value),
+                            periodType: periodType,
+                            alignmentCorrect: alignment.correct,
+                            alignmentMessage: alignment.message
+                        });
+                    }
+                }
+                
+                // Display results
+                debugData.forEach(item => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td class="indicator-name">${item.indicator}</td>
+                        <td class="date-raw">${item.rawDate}</td>
+                        <td class="date-formatted">${item.formattedDate}</td>
+                        <td class="value">${item.value}</td>
+                        <td>${item.periodType}</td>
+                        <td>
+                            <span class="alignment-check ${item.alignmentCorrect ? 'alignment-correct' : 'alignment-incorrect'}">
+                                ${item.alignmentMessage}
+                            </span>
+                        </td>
+                    `;
+                    bodyEl.appendChild(row);
+                });
+                
+                statusEl.className = 'status-message status-success';
+                statusEl.textContent = `✓ Debug check complete. Analyzed ${debugData.length} indicators.`;
+                tableEl.style.display = 'table';
+                
+            } catch (error) {
+                statusEl.className = 'status-message status-error';
+                statusEl.textContent = `✗ Error: ${error.message}`;
+                console.error('Debug check error:', error);
+            }
+        }
+        
+        function checkDateAlignment(indicator, rawDate, formattedDate, value) {
+            // Parse the raw date
+            const date = new Date(rawDate);
+            const month = date.getMonth();
+            const year = date.getFullYear();
+            
+            // Check based on indicator type
+            if (indicator.includes('gdp')) {
+                // For GDP, check if quarter formatting matches
+                const expectedQuarter = Math.floor(month / 3) + 1;
+                const quarterMatch = formattedDate.includes(`Q${expectedQuarter}`);
+                
+                return {
+                    correct: quarterMatch,
+                    message: quarterMatch ? '✓ Quarter matches' : '✗ Quarter mismatch'
+                };
+            } else if (indicator.includes('jobless')) {
+                // For weekly data, just check if it's showing a date
+                return {
+                    correct: formattedDate.includes('/'),
+                    message: formattedDate.includes('/') ? '✓ Week format OK' : '✗ Format issue'
+                };
+            } else {
+                // For monthly data, check if month matches
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const expectedMonth = months[month];
+                const monthMatch = formattedDate.includes(expectedMonth);
+                
+                return {
+                    correct: monthMatch,
+                    message: monthMatch ? '✓ Month matches' : '✗ Month mismatch'
+                };
+            }
+        }
+        
+        function formatValue(indicator, value) {
+            if (typeof value !== 'number') return 'N/A';
+            
+            if (indicator.includes('trade')) {
+                return `$${value.toFixed(1)}B`;
+            } else if (indicator.includes('jobless')) {
+                return `${value.toFixed(0)}K`;
+            } else if (indicator.includes('existinghomes')) {
+                return `${value.toFixed(1)}M`;
+            } else if (indicator.includes('bitcoin')) {
+                return `$${Math.round(value).toLocaleString()}`;
+            } else if (indicator.includes('sentiment')) {
+                return value.toFixed(1);
+            } else {
+                return `${value.toFixed(2)}%`;
+            }
+        }
+        
+        // Auto-run on page load if apiService is available
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (window.apiService) {
+                    console.log('API Service detected, ready for debug checks');
+                } else {
+                    console.warn('API Service not detected, debug checks may fail');
+                }
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

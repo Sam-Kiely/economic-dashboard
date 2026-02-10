@@ -1,0 +1,1160 @@
+/* Economic Dashboard Styles - Complete Version */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #f5f5f5;
+    min-height: 100vh;
+    color: #333;
+}
+
+.header {
+    background: white;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.header h1 {
+    color: #2c3e50;
+    font-size: 2rem;
+}
+
+.nav-tabs {
+    background: white;
+    display: flex;
+    justify-content: center;
+    padding: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.nav-tab {
+    padding: 15px 30px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    color: #666;
+    font-weight: 500;
+    position: relative;
+}
+
+.nav-tab:hover {
+    background: #f8f9fa;
+}
+
+.nav-tab.active {
+    color: #667eea;
+    background: #f8f9fa;
+}
+
+.nav-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.main-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.tab-content {
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Enhanced insights banner */
+.insights-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.insights-banner h2 {
+    margin: 0 0 10px 0;
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.insights-banner p {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    opacity: 0.95;
+}
+
+.section-header {
+    color: #2c3e50;
+    margin: 30px 0 20px 0;
+    font-size: 1.5rem;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.card-title {
+    font-weight: 600;
+    color: #2c3e50;
+    font-size: 1.1rem;
+}
+
+.card-date {
+    font-size: 0.85rem;
+    color: #999;
+}
+
+/* Card definition styling - moved below title */
+.card-definition {
+    font-style: italic;
+    color: #666;
+    font-size: 0.85rem;
+    margin: 5px 0 15px 0;
+    line-height: 1.3;
+}
+
+.card-value {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #2c3e50;
+    margin: 10px 0;
+}
+
+.card-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.card-change.positive {
+    background: #d4edda;
+    color: #155724;
+}
+
+.card-change.negative {
+    background: #f8d7da;
+    color: #721c24;
+}
+
+.card-change.neutral {
+    background: #f0f0f0;
+    color: #666;
+}
+
+.card-description {
+    color: #666;
+    font-size: 0.9rem;
+    margin: 15px 0 10px 0;
+    font-style: italic;
+}
+
+/* Dynamic metric summary styling */
+.metric-summary {
+    font-weight: 500;
+    color: #2c3e50;
+    font-size: 0.9rem;
+    margin: 12px 0 10px 0;
+    line-height: 1.4;
+    min-height: 20px;
+    border-left: 3px solid #3498db;
+    padding-left: 10px;
+    background: linear-gradient(90deg, rgba(52, 152, 219, 0.05) 0%, transparent 100%);
+}
+
+/* Animation for summary updates */
+@keyframes summaryUpdate {
+    0% {
+        opacity: 0.5;
+        transform: translateX(-2px);
+    }
+    50% {
+        opacity: 1;
+        transform: translateX(2px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.metric-summary.updating {
+    animation: summaryUpdate 0.5s ease-in-out;
+}
+
+.next-release {
+    font-size: 0.85rem;
+    color: #999;
+    margin: 10px 0;
+    padding: 8px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.period-returns {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+}
+
+.return-item {
+    text-align: center;
+    padding: 6px 4px;
+    background: #f8f9fa;
+    border-radius: 6px;
+    min-width: 0; /* Allow items to shrink */
+}
+
+.return-label {
+    display: block;
+    font-size: 0.75rem;
+    color: #666;
+    margin-bottom: 4px;
+}
+
+.return-value {
+    display: block;
+    font-weight: 600;
+    font-size: 0.75rem;
+}
+
+.return-value.positive {
+    color: #27ae60;
+}
+
+.return-value.negative {
+    color: #e74c3c;
+}
+
+.chart-container {
+    margin-top: 20px;
+    height: 150px;
+    position: relative;
+}
+
+/* Calendar Section Styles */
+.calendar-section {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 30px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 15px;
+    border-bottom: 2px solid #f0f0f0;
+}
+
+.calendar-header h3 {
+    margin: 0;
+    color: #333;
+    font-size: 1.25rem;
+}
+
+.time-selector {
+    display: flex;
+    gap: 10px;
+}
+
+.time-option {
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    color: #666;
+    background: #f5f5f5;
+}
+
+.time-option:hover {
+    background: #e0e0e0;
+}
+
+.time-option.active {
+    background: #2c3e50;
+    color: white;
+}
+
+.calendar-date {
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 20px 0 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 8px;
+}
+
+.calendar-date.today {
+    background: #e3f2fd;
+    color: #1976d2;
+}
+
+.calendar-item {
+    display: grid;
+    grid-template-columns: 100px 1fr auto;
+    gap: 20px;
+    padding: 15px;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background 0.2s ease;
+}
+
+.calendar-item:hover {
+    background: #f8f9fa;
+}
+
+.calendar-item.past {
+    opacity: 0.6;
+}
+
+.calendar-time {
+    color: #666;
+    font-size: 0.9rem;
+    font-weight: 500;
+}
+
+.calendar-event {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.event-name {
+    font-weight: 600;
+    color: #333;
+    font-size: 1rem;
+}
+
+/* Data values styling */
+.calendar-data-values {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #666;
+    margin-top: 3px;
+}
+
+.data-label {
+    color: #888;
+    font-weight: 500;
+}
+
+.data-value {
+    color: #333;
+    font-weight: 600;
+}
+
+.data-separator {
+    color: #ddd;
+}
+
+/* Impact styling with full labels */
+.calendar-impact {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: center;
+    align-self: center;
+    white-space: nowrap;
+}
+
+.impact-high {
+    background: #fee;
+    color: #c00;
+}
+
+.impact-medium {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.impact-low {
+    background: #f5f5f5;
+    color: #666;
+}
+
+.calendar-empty {
+    text-align: center;
+    padding: 40px;
+    color: #999;
+    font-style: italic;
+}
+
+.footer {
+    text-align: center;
+    padding: 20px;
+    color: #666;
+    margin-top: 40px;
+    background: white;
+    border-top: 1px solid #e0e0e0;
+}
+
+.footer p {
+    margin: 5px 0;
+    opacity: 0.9;
+}
+
+
+
+/* Loading states */
+.loading {
+    display: inline-block;
+    width: 20px;
+    height: 20px;
+    border: 3px solid #f3f3f3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .nav-tabs {
+        flex-direction: column;
+    }
+    
+    .nav-tab {
+        text-align: center;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .card-value {
+        font-size: 2rem;
+    }
+    
+    .period-returns {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 6px;
+    }
+    
+    .return-item {
+        padding: 5px 3px;
+    }
+    
+    .return-label {
+        font-size: 0.65rem;
+    }
+    
+    .return-value {
+        font-size: 0.65rem;
+    }
+    
+    .calendar-header {
+        flex-direction: column;
+        gap: 15px;
+    }
+    
+    .time-selector {
+        width: 100%;
+        justify-content: space-between;
+    }
+    
+    .time-option {
+        padding: 6px 12px;
+        font-size: 0.85rem;
+    }
+    
+    .calendar-item {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .calendar-time {
+        font-size: 0.85rem;
+        color: #888;
+    }
+    
+    .calendar-impact {
+        font-size: 0.75rem;
+        padding: 4px 10px;
+    }
+    
+    .calendar-data-values {
+        flex-wrap: wrap;
+        font-size: 0.8rem;
+    }
+    
+    .card-definition {
+        font-size: 0.8rem;
+    }
+    
+    .metric-summary {
+        font-size: 0.85rem;
+        margin: 10px 0 8px 0;
+    }
+    
+    .insights-banner {
+        padding: 15px;
+    }
+    
+    .insights-banner h2 {
+        font-size: 1.1rem;
+    }
+    
+    .insights-banner p {
+        font-size: 0.9rem;
+    }
+}
+
+/* Utility classes */
+.text-center {
+    text-align: center;
+}
+
+.mt-20 {
+    margin-top: 20px;
+}
+
+.mb-20 {
+    margin-bottom: 20px;
+}
+
+.hidden {
+    display: none;
+}
+
+/* Extra small screens (phones in portrait, less than 480px) */
+@media (max-width: 479px) {
+    .period-returns {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 4px;
+        margin: 10px 0;
+    }
+    
+    .return-item {
+        padding: 4px 2px;
+    }
+    
+    .return-label {
+        font-size: 0.6rem;
+    }
+    
+    .return-value {
+        font-size: 0.6rem;
+        font-weight: 600;
+    }
+}
+/* Add these banking-specific styles to your existing styles.css file */
+
+/* Banking Tab Specific Styles */
+.card-subvalue {
+    font-size: 1.1rem;
+    color: #666;
+    margin: 5px 0 10px 0;
+    font-style: italic;
+}
+
+.banking-period-changes {
+    display: flex;
+    gap: 20px;
+    margin: 10px 0;
+    padding: 10px;
+    background: #f8f9fa;
+    border-radius: 6px;
+}
+
+.banking-period-changes .period-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.banking-period-changes .period-label {
+    font-size: 0.85rem;
+    color: #666;
+    font-weight: 500;
+}
+
+.banking-period-changes .period-value {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.banking-period-changes .period-value.positive {
+    color: #27ae60;
+}
+
+.banking-period-changes .period-value.negative {
+    color: #e74c3c;
+}
+
+/* Banking Table Styles */
+.table-container {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-top: 30px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    overflow-x: auto;
+}
+
+.table-header-info {
+    margin-bottom: 15px;
+    font-size: 0.9rem;
+    color: #666;
+    font-style: italic;
+}
+
+.peer-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 800px;
+}
+
+.peer-table thead {
+    background: #f8f9fa;
+}
+
+.peer-table th {
+    padding: 12px;
+    text-align: left;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #dee2e6;
+    font-size: 0.9rem;
+}
+
+.peer-table th.sorted {
+    background: #e9ecef;
+    position: relative;
+}
+
+.peer-table th.sorted::after {
+    content: " ▼";
+    color: #667eea;
+    font-size: 0.8rem;
+}
+
+.peer-table td {
+    padding: 10px 12px;
+    border-bottom: 1px solid #e9ecef;
+    font-size: 0.9rem;
+}
+
+.peer-table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.ticker-cell {
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+/* TCBI row - highlighted in light blue */
+.tcbi-row {
+    background: #e6f2ff !important;
+    font-weight: 600;
+}
+
+.tcbi-row:hover {
+    background: #d9ecff !important;
+}
+
+/* KRX index row - highlighted in light grey */
+.krx-row {
+    background: #f0f0f0 !important;
+    font-weight: 600;
+}
+
+.krx-row:hover {
+    background: #e8e8e8 !important;
+}
+
+/* Positive/Negative values in table */
+.peer-table .positive {
+    color: #27ae60;
+}
+
+.peer-table .negative {
+    color: #e74c3c;
+}
+
+/* Error and partial data cells */
+.peer-table .error-cell {
+    color: #999;
+    font-style: italic;
+}
+
+.peer-table .partial-data-cell {
+    color: #f39c12;
+    font-style: italic;
+}
+
+/* Notes section for banking tab */
+.notes-section {
+    margin-top: 30px;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #667eea;
+}
+
+.notes-section h4 {
+    color: #2c3e50;
+    margin: 0 0 15px 0;
+    font-size: 1.1rem;
+}
+
+.notes-section ul {
+    list-style-position: inside;
+    color: #666;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    margin: 0;
+}
+
+.notes-section li {
+    margin-bottom: 8px;
+}
+
+.sort-note {
+    font-size: 0.85rem;
+    color: #666;
+    font-style: italic;
+    margin-top: 10px;
+    text-align: center;
+}
+
+/* Responsive adjustments for banking tab */
+@media (max-width: 768px) {
+    .banking-period-changes {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .table-container {
+        padding: 15px;
+    }
+    
+    .peer-table {
+        font-size: 0.8rem;
+    }
+    
+    .peer-table th,
+    .peer-table td {
+        padding: 8px 6px;
+    }
+    
+    .notes-section {
+        padding: 15px;
+    }
+    
+    .notes-section ul {
+        font-size: 0.85rem;
+    }
+}
+
+/* ============================================
+   LOADING STATES AND INDICATORS
+   ============================================ */
+
+/* Global Loading Overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+    transition: opacity 0.3s ease;
+}
+
+.loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-overlay.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* Global Loading Content */
+.loading-content {
+    text-align: center;
+    padding: 40px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    max-width: 400px;
+}
+
+.loading-content h3 {
+    margin: 20px 0 10px;
+    color: #2c3e50;
+    font-size: 1.5rem;
+}
+
+.loading-content p {
+    color: #666;
+    margin-bottom: 20px;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #e3e3e3;
+    border-top: 4px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 0 auto;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Loading Progress Bar */
+.loading-progress {
+    width: 100%;
+    height: 6px;
+    background: #e3e3e3;
+    border-radius: 3px;
+    overflow: hidden;
+    margin-top: 20px;
+}
+
+.loading-progress-bar {
+    height: 100%;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    border-radius: 3px;
+    width: 0%;
+    transition: width 0.5s ease;
+}
+
+/* Tab Loading Overlay */
+.tab-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.9);
+    z-index: 100;
+    border-radius: 8px;
+}
+
+.tab-loading .loading-content {
+    box-shadow: none;
+    background: transparent;
+    padding: 20px;
+}
+
+.tab-loading .loading-content h4 {
+    font-size: 1.2rem;
+    margin: 15px 0 5px;
+    color: #2c3e50;
+}
+
+.tab-loading .loading-message {
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Card Loading States */
+.card-loadable {
+    position: relative;
+}
+
+.card-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    border-radius: 8px;
+    z-index: 10;
+    transition: opacity 0.3s ease;
+}
+
+.card-loading.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.card-loading.visible {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.card-loading-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.card-spinner {
+    width: 30px;
+    height: 30px;
+    border: 3px solid #e3e3e3;
+    border-top: 3px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+
+.card-loading-content span {
+    color: #666;
+    font-size: 0.85rem;
+}
+
+/* Card Loading State */
+.card.loading {
+    opacity: 0.6;
+}
+
+.card.loading .card-value,
+.card.loading .card-change {
+    color: #999;
+}
+
+/* Tab Content Loading */
+.tab-content {
+    position: relative;
+    min-height: 400px;
+}
+
+/* Loading States for Different Components */
+.dashboard-grid.loading .card {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.market-grid.loading .market-card {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.rates-grid.loading .card {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.banking-container.loading .card {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+/* Pulse Animation for Loading Elements */
+@keyframes pulse {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; }
+    100% { opacity: 1; }
+}
+
+.loading-pulse {
+    animation: pulse 1.5s ease-in-out infinite;
+}
+
+/* Skeleton Loading for Cards */
+.card-skeleton {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: loading-skeleton 1.5s infinite;
+}
+
+@keyframes loading-skeleton {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Loading States for Tables */
+.peer-table.loading {
+    opacity: 0.6;
+}
+
+.peer-table.loading tbody tr {
+    animation: pulse 2s ease-in-out infinite;
+}
+
+/* Loading States for Charts */
+.chart-container.loading canvas {
+    opacity: 0.3;
+}
+
+.chart-container.loading::after {
+    content: 'Loading Chart...';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #666;
+    font-size: 0.9rem;
+}
+
+/* Mobile Loading Adjustments */
+@media (max-width: 768px) {
+    .loading-content {
+        padding: 20px;
+        margin: 20px;
+        max-width: none;
+    }
+    
+    .loading-content h3 {
+        font-size: 1.2rem;
+    }
+    
+    .loading-spinner {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .tab-loading .loading-spinner {
+        width: 30px;
+        height: 30px;
+    }
+}
+/* Hide static/placeholder period returns in Rates tab */
+#rates .period-returns .return-value:not(.positive):not(.negative) {
+    display: none !important;
+}
+
+/* Hide entire period-returns container if it only contains placeholders */
+#rates .period-returns:has(.return-value:not(.positive):not(.negative)) {
+    display: none !important;
+}
+
+/* Hide dynamically generated period-changes on rates tab, except Fed Funds */
+#rates .period-changes {
+    display: none !important;
+}
+
+/* Show and style period-changes specifically for Fed Funds chart */
+#rates .card:has(#fedfunds-chart) .period-changes {
+    display: block !important;
+    margin: 8px 0;
+    padding: 10px 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border-left: 4px solid #9C27B0;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+/* Style the period-row container for Fed Funds */
+#rates .card:has(#fedfunds-chart) .period-changes .period-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+    gap: 12px;
+    align-items: center;
+}
+
+/* Style individual period items for Fed Funds */
+#rates .card:has(#fedfunds-chart) .period-changes .period-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    padding: 4px 6px;
+    border-radius: 4px;
+    background: white;
+    border: 1px solid rgba(0,0,0,0.08);
+    transition: all 0.2s ease;
+}
+
+/* Style period labels for Fed Funds */
+#rates .card:has(#fedfunds-chart) .period-changes .period-item .period-label {
+    color: #6c757d;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 1px;
+}
+
+/* Style period values for Fed Funds */
+#rates .card:has(#fedfunds-chart) .period-changes .period-item .period-value {
+    font-weight: 700;
+    font-size: 0.85rem;
+    line-height: 1;
+}
+
+/* Positive/negative styling for Fed Funds period changes */
+#rates .card:has(#fedfunds-chart) .period-changes .period-item .period-value.positive {
+    color: #dc3545;
+}
+
+#rates .card:has(#fedfunds-chart) .period-changes .period-item .period-value.negative {
+    color: #28a745;
+}
+
+/* Hover effects */
+#rates .card:has(#fedfunds-chart) .period-changes .period-item:hover {
+    background: #f1f3f4;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
