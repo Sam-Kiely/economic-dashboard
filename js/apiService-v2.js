@@ -605,7 +605,8 @@ class APIService {
                     returns: extendedReturns,
                     seriesId: 'fedFunds'
                 };
-                console.log('Updated Fed Funds Rate:', current);
+                console.log('📊 Updated Fed Funds Rate:', current, 'Change:', extendedReturns['1W']);
+                console.log('📊 Fed Funds update object:', updates['fedfunds-chart']);
             }
 
             await new Promise(resolve => setTimeout(resolve, 500));
@@ -712,7 +713,9 @@ class APIService {
 
             for (const [key, seriesId] of Object.entries(API_CONFIG.FRED.series.h8Data)) {
                 try {
+                    console.log(`📊 Fetching H8 data for ${key} (${seriesId})`);
                     const h8Data = await this.getFREDSeries(seriesId, 13, 'w');
+                    console.log(`📊 H8 ${key} data:`, h8Data ? `${h8Data.values?.length} values` : 'null');
                     if (h8Data && h8Data.values.length > 1) {
                         const current = h8Data.values[h8Data.values.length - 1];
                         const previous = h8Data.values[h8Data.values.length - 2];
@@ -743,7 +746,14 @@ class APIService {
             console.error('Error updating economic data:', error);
         }
 
-        console.log('Data update complete. Updates:', Object.keys(updates).length);
+        console.log('📊 Data update complete. Updates:', Object.keys(updates).length);
+        console.log('📊 Update keys:', Object.keys(updates));
+        console.log('📊 Sample rate updates:', {
+            fedfunds: updates['fedfunds-chart']?.current,
+            tbill: updates['tbill-chart']?.current,
+            treasury2yr: updates['2yr-chart']?.current,
+            treasury10yr: updates['10yr-chart']?.current
+        });
         return updates;
     }
 }
