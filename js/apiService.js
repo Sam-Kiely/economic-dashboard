@@ -555,7 +555,7 @@ class APIService {
                 // Debug log to verify GDP data alignment
                 console.log(`GDP Data - Last observation date: ${gdpData.dates[gdpData.dates.length - 1]}, Value: ${current}%`);
                 
-                updates['gdp-chart'] = {
+                updates['gdp-card'] = {
                     current: current,  // Already a percentage
                     change: current - previous,
                     changeType: current > previous ? 'positive' : 'negative',
@@ -758,8 +758,8 @@ class APIService {
 
             // RATES SECTION - Get all rates data
 
-            // 2-Year Treasury - Get 2000 days of daily data for 3Y/5Y calculations
-            const treasury2Data = await this.getFREDSeries(API_CONFIG.FRED.series.treasury2yr, 2000, 'd');
+            // 2-Year Treasury - Get 365 days of daily data (1 year)
+            const treasury2Data = await this.getFREDSeries(API_CONFIG.FRED.series.treasury2yr, 365, 'd');
             if (treasury2Data && treasury2Data.values.length > 1) {
                 const current = treasury2Data.values[treasury2Data.values.length - 1];
                 const previous = treasury2Data.values[treasury2Data.values.length - 2];
@@ -781,8 +781,8 @@ class APIService {
 
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // 5-Year Treasury - Get 2000 days of daily data for 3Y/5Y calculations
-            const treasury5Data = await this.getFREDSeries(API_CONFIG.FRED.series.treasury5yr, 2000, 'd');
+            // 5-Year Treasury - Get 365 days of daily data (1 year)
+            const treasury5Data = await this.getFREDSeries(API_CONFIG.FRED.series.treasury5yr, 365, 'd');
             if (treasury5Data && treasury5Data.values.length > 1) {
                 const current = treasury5Data.values[treasury5Data.values.length - 1];
                 const previous = treasury5Data.values[treasury5Data.values.length - 2];
@@ -870,8 +870,8 @@ class APIService {
 
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Federal Funds Upper Target - Get 2000 days of daily data for 3Y/5Y calculations
-            const fedFundsData = await this.getFREDSeries(API_CONFIG.FRED.series.fedFunds, 2000, 'd', true);
+            // Federal Funds Upper Target - Get 365 days of daily data (1 year)
+            const fedFundsData = await this.getFREDSeries(API_CONFIG.FRED.series.fedFunds, 365, 'd', true);
             if (fedFundsData && fedFundsData.values.length > 1) {
                 const current = fedFundsData.values[fedFundsData.values.length - 1];
                 const previous = fedFundsData.values[fedFundsData.values.length - 2];
