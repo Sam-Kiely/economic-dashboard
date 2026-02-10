@@ -3,10 +3,11 @@ class APIService {
     constructor() {
         this.cache = {};
         this.lastFetch = {};
-        // Use Vercel API routes instead of CORS proxy
-        this.useVercelAPI = true;
-        // Fallback to CORS proxy if Vercel API fails
+        // Use CORS proxy for better compatibility
+        this.useVercelAPI = false;
+        // Use CORS proxy
         this.corsProxy = 'https://corsproxy.io/?';
+        this.useProxy = true;
     }
 
     // Helper method to filter observations by frequency
@@ -77,17 +78,8 @@ class APIService {
             window.loadingManager.showServiceLoading('apiService', `Fetching ${cacheKey}...`);
         }
 
-        // Skip CORS proxy for Vercel API calls when in Vercel environment
-        const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
-                                   window.location.hostname.includes('vercel.') ||
-                                   window.location.hostname === 'localhost' ||
-                                   window.location.hostname === '127.0.0.1';
-
-        if (this.useVercelAPI && isVercelEnvironment) {
-            // This method should not be used with Vercel API - use direct endpoint calls instead
-            // Return error to trigger fallback to direct API calls
-            throw new Error('Use Vercel API routes instead of fetchWithCache');
-        }
+        // Always use CORS proxy for external APIs
+        // Skip this check since we're using CORS proxy
 
         // Define CORS proxies (primary and fallback)
         const proxies = [
@@ -171,76 +163,7 @@ class APIService {
 
     // FRED API Methods
     async getFREDSeries(seriesId, limit = 13, frequency = null, forceRefresh = false) {
-        try {
-            // Check if we're in production/preview (has vercel domain or localhost for testing)
-            const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
-                                       window.location.hostname.includes('vercel.') ||
-                                       window.location.hostname === 'localhost' ||
-                                       window.location.hostname === '127.0.0.1';
-
-            // Try using Vercel API route first
-            if (this.useVercelAPI && isVercelEnvironment) {
-                // Calculate date range for limit
-                const endDate = new Date().toISOString().split('T')[0];
-                const startDate = new Date();
-
-                // Calculate start date based on limit and frequency
-                if (frequency === 'd' || !frequency) {
-                    startDate.setDate(startDate.getDate() - (limit * 2)); // Extra buffer for daily data
-                } else if (frequency === 'w') {
-                    startDate.setDate(startDate.getDate() - (limit * 7 * 2));
-                } else if (frequency === 'm') {
-                    startDate.setMonth(startDate.getMonth() - (limit * 2));
-                } else if (frequency === 'q') {
-                    startDate.setMonth(startDate.getMonth() - (limit * 3 * 2));
-                } else if (frequency === 'a') {
-                    startDate.setFullYear(startDate.getFullYear() - (limit * 2));
-                }
-
-                const startDateStr = startDate.toISOString().split('T')[0];
-
-                // Use Vercel API endpoint
-                const vercelUrl = `/api/fred?series=${seriesId}&start_date=${startDateStr}&end_date=${endDate}`;
-                console.log(`Fetching FRED data via Vercel API: ${seriesId}`);
-
-                const response = await fetch(vercelUrl);
-                if (response.ok) {
-                    const data = await response.json();
-
-                    if (data && data.observations && data.observations.length > 0) {
-                        // Filter out any "." values (missing data) and apply frequency filter
-                        let validObservations = data.observations
-                            .filter(obs => obs.value !== '.' && !isNaN(parseFloat(obs.value)));
-
-                        // Apply frequency filtering if specified
-                        if (frequency) {
-                            validObservations = this.filterByFrequency(validObservations, frequency);
-                        }
-
-                        // Sort by date descending and limit
-                        validObservations.sort((a, b) => new Date(b.date) - new Date(a.date));
-                        validObservations = validObservations.slice(0, limit);
-
-                        // Reverse to get chronological order
-                        validObservations.reverse();
-
-                        if (validObservations.length > 0) {
-                            return {
-                                values: validObservations.map(obs => parseFloat(obs.value)),
-                                dates: validObservations.map(obs => obs.date),
-                                seriesId: seriesId
-                            };
-                        }
-                    }
-                } else {
-                    console.warn(`Vercel API failed for ${seriesId}, falling back to direct FRED API with CORS proxy`);
-                }
-            }
-        } catch (vercelError) {
-            console.warn(`Vercel API error for ${seriesId}:`, vercelError.message, 'Falling back to CORS proxy');
-        }
-
-        // Fallback to original CORS proxy method
+        // Always use CORS proxy method
         // Build URL with optional frequency parameter
         let url = `${API_CONFIG.FRED.baseURL}?series_id=${seriesId}&api_key=${API_CONFIG.FRED.apiKey}&file_type=json&limit=${limit}&sort_order=desc`;
 
@@ -462,24 +385,15 @@ class APIService {
     async testConnections() {
         console.log('Testing API connections...');
 
-        // Check if we're in Vercel environment
-        const isVercelEnvironment = window.location.hostname.includes('vercel.app') ||
-                                   window.location.hostname.includes('vercel.') ||
-                                   window.location.hostname === 'localhost' ||
-                                   window.location.hostname === '127.0.0.1';
-
-        if (isVercelEnvironment) {
-            console.log('FRED API: ✓ Using Vercel API routes');
-            console.log('Yahoo Finance API: ✓ Using Vercel API routes');
-        } else {
-            // Test FRED with direct API
-            try {
-                const fredTest = await this.getFREDSeries('UNRATE', 1);
-                console.log('FRED API:', fredTest ? '✓ Connected' : '✗ Failed');
-            } catch (e) {
-                console.log('FRED API: ✗ Failed -', e.message);
-            }
+        // Test FRED with CORS proxy
+        try {
+            const fredTest = await this.getFREDSeries('UNRATE', 1);
+            console.log('FRED API:', fredTest ? '✓ Connected via CORS proxy' : '✗ Failed');
+        } catch (e) {
+            console.log('FRED API: ✗ Failed -', e.message);
         }
+
+        console.log('Yahoo Finance API: ✓ Using CORS proxy');
     }
 
     // Main update method - expanded to include all indicators with more historical data
