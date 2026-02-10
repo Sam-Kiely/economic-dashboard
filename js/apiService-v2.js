@@ -388,14 +388,15 @@ class APIService {
             const gdpData = await this.getFREDSeries(API_CONFIG.FRED.series.gdp, 8, 'q');
             console.log('📊 GDP raw data:', gdpData ? `${gdpData.values?.length} values, latest: ${gdpData.values?.[gdpData.values.length-1]}` : 'null');
 
-            if (gdpData && gdpData.values.length > 1) {
+            if (gdpData && gdpData.values.length > 0) {
                 const current = gdpData.values[gdpData.values.length - 1];
-                const previous = gdpData.values[gdpData.values.length - 2];
+                const previous = gdpData.values.length > 1 ? gdpData.values[gdpData.values.length - 2] : current;
+                const change = gdpData.values.length > 1 ? current - previous : 0;
 
                 const gdpUpdate = {
                     current: current,
-                    change: current - previous,
-                    changeType: current > previous ? 'positive' : 'negative',
+                    change: change,
+                    changeType: change > 0 ? 'positive' : change < 0 ? 'negative' : 'neutral',
                     changeLabel: 'QoQ',
                     historicalData: gdpData.values,
                     dates: gdpData.dates.map(d => this.formatDate(d, false, true)),
@@ -404,7 +405,7 @@ class APIService {
                 };
 
                 updates['gdp-chart'] = gdpUpdate;
-                console.log('📊 GDP update created:', gdpUpdate);
+                console.log('📊 GDP update created:', gdpUpdate, `(${gdpData.values.length} values)`);
             } else {
                 console.warn('📊 GDP data insufficient:', gdpData);
             }
@@ -636,6 +637,94 @@ class APIService {
                     seriesId: 'tbill3m'
                 };
                 console.log('Updated 3-Month T-Bill:', current);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // 1M SOFR
+            const sofrData = await this.getFREDSeries(API_CONFIG.FRED.series.sofr1m, 100);
+            if (sofrData && sofrData.values.length > 0) {
+                const current = sofrData.values[sofrData.values.length - 1];
+                const extendedReturns = this.calculateExtendedReturnsForRates(sofrData.values, sofrData.dates);
+
+                updates['sofr-chart'] = {
+                    current: current,
+                    change: extendedReturns['1W'] || 0,
+                    changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
+                    changeLabel: '1W',
+                    historicalData: sofrData.values.slice(-30),
+                    dates: sofrData.dates.slice(-30).map(d => this.formatDate(d)),
+                    observationDate: sofrData.dates[sofrData.dates.length - 1],
+                    returns: extendedReturns,
+                    seriesId: 'sofr1m'
+                };
+                console.log('📊 Updated 1M SOFR:', current, 'Change:', extendedReturns['1W']);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Treasury 5yr
+            const treasury5yrData = await this.getFREDSeries(API_CONFIG.FRED.series.treasury5yr, 100);
+            if (treasury5yrData && treasury5yrData.values.length > 0) {
+                const current = treasury5yrData.values[treasury5yrData.values.length - 1];
+                const extendedReturns = this.calculateExtendedReturnsForRates(treasury5yrData.values, treasury5yrData.dates);
+
+                updates['5yr-chart'] = {
+                    current: current,
+                    change: extendedReturns['1W'] || 0,
+                    changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
+                    changeLabel: '1W',
+                    historicalData: treasury5yrData.values.slice(-30),
+                    dates: treasury5yrData.dates.slice(-30).map(d => this.formatDate(d)),
+                    observationDate: treasury5yrData.dates[treasury5yrData.dates.length - 1],
+                    returns: extendedReturns,
+                    seriesId: 'treasury5yr'
+                };
+                console.log('📊 Updated 5-Year Treasury:', current);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // Treasury 30yr
+            const treasury30yrData = await this.getFREDSeries(API_CONFIG.FRED.series.treasury30yr, 100);
+            if (treasury30yrData && treasury30yrData.values.length > 0) {
+                const current = treasury30yrData.values[treasury30yrData.values.length - 1];
+                const extendedReturns = this.calculateExtendedReturnsForRates(treasury30yrData.values, treasury30yrData.dates);
+
+                updates['30yr-chart'] = {
+                    current: current,
+                    change: extendedReturns['1W'] || 0,
+                    changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
+                    changeLabel: '1W',
+                    historicalData: treasury30yrData.values.slice(-30),
+                    dates: treasury30yrData.dates.slice(-30).map(d => this.formatDate(d)),
+                    observationDate: treasury30yrData.dates[treasury30yrData.dates.length - 1],
+                    returns: extendedReturns,
+                    seriesId: 'treasury30yr'
+                };
+                console.log('📊 Updated 30-Year Treasury:', current);
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 500));
+
+            // High Yield Index
+            const highYieldData = await this.getFREDSeries(API_CONFIG.FRED.series.highYield, 100);
+            if (highYieldData && highYieldData.values.length > 0) {
+                const current = highYieldData.values[highYieldData.values.length - 1];
+                const extendedReturns = this.calculateExtendedReturnsForRates(highYieldData.values, highYieldData.dates);
+
+                updates['highyield-chart'] = {
+                    current: current,
+                    change: extendedReturns['1W'] || 0,
+                    changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
+                    changeLabel: '1W',
+                    historicalData: highYieldData.values.slice(-30),
+                    dates: highYieldData.dates.slice(-30).map(d => this.formatDate(d)),
+                    observationDate: highYieldData.dates[highYieldData.dates.length - 1],
+                    returns: extendedReturns,
+                    seriesId: 'highYield'
+                };
+                console.log('📊 Updated High Yield Index:', current);
             }
 
             await new Promise(resolve => setTimeout(resolve, 500));

@@ -439,8 +439,8 @@ class DataUpdater {
                     // Treasury yields to 2 decimal places
                     valueElement.textContent = data.current.toFixed(2) + '%';
                 } else if (cardId.includes('spread')) {
-                    // Format spread in basis points
-                    const bpsValue = data.current * 100; // Convert percentage points to basis points
+                    // Format spread in basis points (already converted in apiService-v2)
+                    const bpsValue = data.current; // Already in basis points
                     valueElement.textContent = (bpsValue >= 0 ? '+' : '') + bpsValue.toFixed(0) + ' bps';
                 } else if (cardId.includes('rate') || cardId.includes('yield') || cardId.includes('fedfunds') || cardId.includes('mortgage') || cardId.includes('prime') || cardId.includes('sofr') || cardId.includes('tbill')) {
                     valueElement.textContent = data.current.toFixed(2) + '%';
@@ -559,7 +559,13 @@ class DataUpdater {
         if (data.historicalData && data.dates && chartElement) {
             this.updateChart(cardId, data.historicalData, data.dates);
         }
-        
+
+        // Update period returns for rate cards
+        const isRateCard = ['2yr', '10yr', '30yr', '5yr', 'sofr', 'fedfunds', 'tbill', 'highyield', 'spread'].some(rate => cardId.includes(rate));
+        if (isRateCard && data.returns && Object.keys(data.returns).length > 0) {
+            this.updateRatePeriodReturns(cardId, data.returns);
+        }
+
         // Store treasury data for spread calculation
         if (cardId === '2yr-chart') {
             this.treasuryData.twoYear = data.current;
