@@ -530,7 +530,7 @@ class APIService {
                 const previous = homeSalesData.values[homeSalesData.values.length - 2];
                 const momChange = ((current - previous) / previous) * 100;
 
-                updates['homesales-chart'] = {
+                updates['newhomes-chart'] = {
                     current: current,
                     change: momChange,
                     changeType: momChange > 0 ? 'positive' : 'negative',
@@ -594,7 +594,7 @@ class APIService {
                 const current = fedFundsData.values[fedFundsData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(fedFundsData.values, fedFundsData.dates);
 
-                updates['fed-chart'] = {
+                updates['fedfunds-chart'] = {
                     current: current,
                     change: extendedReturns['1W'] || 0,
                     changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
@@ -682,7 +682,7 @@ class APIService {
             if (treasury2yr && treasury10yr) {
                 const spreadData = this.calculate2s10sHistorical(treasury2yr, treasury10yr);
                 if (spreadData) {
-                    updates['2s10s-chart'] = {
+                    updates['spread-chart'] = {
                         current: spreadData.current,
                         change: spreadData.change,
                         changeType: spreadData.change >= 0 ? 'positive' : 'negative',
@@ -698,6 +698,18 @@ class APIService {
             await new Promise(resolve => setTimeout(resolve, 500));
 
             // H8 Data
+            const h8ChartMapping = {
+                totalLoans: 'totalloans-chart',
+                ciLoans: 'ciloans-chart',
+                consumerLoans: 'consumerloans-chart',
+                creLoans: 'creloans-chart',
+                otherLoans: 'otherloans-chart',
+                deposits: 'deposits-chart',
+                largeTimeDeposits: 'largetime-chart',
+                otherDeposits: 'otherdeposits-chart',
+                borrowings: 'borrowings-chart'
+            };
+
             for (const [key, seriesId] of Object.entries(API_CONFIG.FRED.series.h8Data)) {
                 try {
                     const h8Data = await this.getFREDSeries(seriesId, 13, 'w');
@@ -706,18 +718,20 @@ class APIService {
                         const previous = h8Data.values[h8Data.values.length - 2];
                         const weeklyChange = ((current - previous) / previous) * 100;
 
-                        const chartId = `h8-${key.toLowerCase()}`;
-                        updates[chartId] = {
-                            current: key === 'borrowings' ? current / 1000 : current,
-                            change: weeklyChange,
-                            changeType: weeklyChange >= 0 ? 'positive' : 'negative',
-                            changeLabel: 'WoW',
-                            historicalData: h8Data.values.map(v => key === 'borrowings' ? v / 1000 : v),
-                            dates: h8Data.dates.map(d => this.formatDate(d, true)),
-                            observationDate: h8Data.dates[h8Data.dates.length - 1],
-                            seriesId: key
-                        };
-                        console.log(`Updated H8 ${key}:`, updates[chartId].current);
+                        const chartId = h8ChartMapping[key];
+                        if (chartId) {
+                            updates[chartId] = {
+                                current: key === 'borrowings' ? current / 1000 : current,
+                                change: weeklyChange,
+                                changeType: weeklyChange >= 0 ? 'positive' : 'negative',
+                                changeLabel: 'WoW',
+                                historicalData: h8Data.values.map(v => key === 'borrowings' ? v / 1000 : v),
+                                dates: h8Data.dates.map(d => this.formatDate(d, true)),
+                                observationDate: h8Data.dates[h8Data.dates.length - 1],
+                                seriesId: key
+                            };
+                            console.log(`Updated H8 ${key}:`, updates[chartId].current);
+                        }
                     }
                     await new Promise(resolve => setTimeout(resolve, 300));
                 } catch (error) {
