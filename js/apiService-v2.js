@@ -354,6 +354,23 @@ class APIService {
         return changes;
     }
 
+    // Helper to get exactly 1 year of data for chart display
+    getOneYearOfData(values, dates) {
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        let startIndex = 0;
+        for (let i = 0; i < dates.length; i++) {
+            if (new Date(dates[i]) >= oneYearAgo) {
+                startIndex = i;
+                break;
+            }
+        }
+        return {
+            values: values.slice(startIndex),
+            dates: dates.slice(startIndex)
+        };
+    }
+
     // Calculate returns for rates
     calculateExtendedReturnsForRates(values, dates) {
         if (!values || !dates || values.length === 0) {
@@ -859,18 +876,17 @@ class APIService {
                 const current = fedFundsData.values[fedFundsData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(fedFundsData.values, fedFundsData.dates);
 
-                // Only display last 365 days for chart, but use full data for returns
-                const oneYearData = fedFundsData.values.slice(-365);
-                const oneYearDates = fedFundsData.dates.slice(-365);
+                // Only display last year for chart, but use full data for returns
+                const oneYearChartData = this.getOneYearOfData(fedFundsData.values, fedFundsData.dates);
 
                 updates['fedfunds-chart'] = {
                     current: current,
                     change: extendedReturns['1W'] || 0,
                     changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
                     changeLabel: '1W',
-                    historicalData: oneYearData,
-                    dates: this.generateMonthlyLabels(oneYearDates, oneYearData),
-                    originalDates: oneYearDates,  // Preserve original dates for tooltips
+                    historicalData: oneYearChartData.values,
+                    dates: this.generateMonthlyLabels(oneYearChartData.dates, oneYearChartData.values),
+                    originalDates: oneYearChartData.dates,  // Preserve original dates for tooltips
                     observationDate: fedFundsData.dates[fedFundsData.dates.length - 1],
                     returns: extendedReturns,
                     seriesId: 'fedFunds'
@@ -887,18 +903,17 @@ class APIService {
                 const current = tbill3mData.values[tbill3mData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(tbill3mData.values, tbill3mData.dates);
 
-                // Only display last 365 days for chart, but use full data for returns
-                const oneYearData = tbill3mData.values.slice(-365);
-                const oneYearDates = tbill3mData.dates.slice(-365);
+                // Only display last year for chart, but use full data for returns
+                const oneYearChartData = this.getOneYearOfData(tbill3mData.values, tbill3mData.dates);
 
                 updates['tbill-chart'] = {
                     current: current,
                     change: extendedReturns['1W'] || 0,
                     changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
                     changeLabel: '1W',
-                    historicalData: oneYearData,
-                    dates: this.generateMonthlyLabels(oneYearDates, oneYearData),
-                    originalDates: oneYearDates,  // Preserve original dates for tooltips
+                    historicalData: oneYearChartData.values,
+                    dates: this.generateMonthlyLabels(oneYearChartData.dates, oneYearChartData.values),
+                    originalDates: oneYearChartData.dates,  // Preserve original dates for tooltips
                     observationDate: tbill3mData.dates[tbill3mData.dates.length - 1],
                     returns: extendedReturns,
                     seriesId: 'tbill3m'
@@ -914,18 +929,17 @@ class APIService {
                 const current = sofrData.values[sofrData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(sofrData.values, sofrData.dates);
 
-                // Only display last 365 days for chart, but use full data for returns
-                const oneYearData = sofrData.values.slice(-365);
-                const oneYearDates = sofrData.dates.slice(-365);
+                // Only display last year for chart, but use full data for returns
+                const oneYearChartData = this.getOneYearOfData(sofrData.values, sofrData.dates);
 
                 updates['sofr-chart'] = {
                     current: current,
                     change: extendedReturns['1W'] || 0,
                     changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
                     changeLabel: '1W',
-                    historicalData: oneYearData,
-                    dates: this.generateMonthlyLabels(oneYearDates, oneYearData),
-                    originalDates: oneYearDates,  // Preserve original dates for tooltips
+                    historicalData: oneYearChartData.values,
+                    dates: this.generateMonthlyLabels(oneYearChartData.dates, oneYearChartData.values),
+                    originalDates: oneYearChartData.dates,  // Preserve original dates for tooltips
                     observationDate: sofrData.dates[sofrData.dates.length - 1],
                     returns: extendedReturns,
                     seriesId: 'sofr1m'
@@ -941,18 +955,17 @@ class APIService {
                 const current = treasury5yrData.values[treasury5yrData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(treasury5yrData.values, treasury5yrData.dates);
 
-                // Only display last 365 days for chart, but use full data for returns
-                const oneYearData = treasury5yrData.values.slice(-365);
-                const oneYearDates = treasury5yrData.dates.slice(-365);
+                // Only display last year for chart, but use full data for returns
+                const oneYearChartData = this.getOneYearOfData(treasury5yrData.values, treasury5yrData.dates);
 
                 updates['5yr-chart'] = {
                     current: current,
                     change: extendedReturns['1W'] || 0,
                     changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
                     changeLabel: '1W',
-                    historicalData: oneYearData,
-                    dates: this.generateMonthlyLabels(oneYearDates, oneYearData),
-                    originalDates: oneYearDates,  // Preserve original dates for tooltips
+                    historicalData: oneYearChartData.values,
+                    dates: this.generateMonthlyLabels(oneYearChartData.dates, oneYearChartData.values),
+                    originalDates: oneYearChartData.dates,  // Preserve original dates for tooltips
                     observationDate: treasury5yrData.dates[treasury5yrData.dates.length - 1],
                     returns: extendedReturns,
                     seriesId: 'treasury5yr'
@@ -968,18 +981,17 @@ class APIService {
                 const current = treasury30yrData.values[treasury30yrData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(treasury30yrData.values, treasury30yrData.dates);
 
-                // Only display last 365 days for chart, but use full data for returns
-                const oneYearData = treasury30yrData.values.slice(-365);
-                const oneYearDates = treasury30yrData.dates.slice(-365);
+                // Only display last year for chart, but use full data for returns
+                const oneYearChartData = this.getOneYearOfData(treasury30yrData.values, treasury30yrData.dates);
 
                 updates['30yr-chart'] = {
                     current: current,
                     change: extendedReturns['1W'] || 0,
                     changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
                     changeLabel: '1W',
-                    historicalData: oneYearData,
-                    dates: this.generateMonthlyLabels(oneYearDates, oneYearData),
-                    originalDates: oneYearDates,  // Preserve original dates for tooltips
+                    historicalData: oneYearChartData.values,
+                    dates: this.generateMonthlyLabels(oneYearChartData.dates, oneYearChartData.values),
+                    originalDates: oneYearChartData.dates,  // Preserve original dates for tooltips
                     observationDate: treasury30yrData.dates[treasury30yrData.dates.length - 1],
                     returns: extendedReturns,
                     seriesId: 'treasury30yr'
@@ -995,18 +1007,17 @@ class APIService {
                 const current = highYieldData.values[highYieldData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(highYieldData.values, highYieldData.dates);
 
-                // Only display last 365 days for chart, but use full data for returns
-                const oneYearData = highYieldData.values.slice(-365);
-                const oneYearDates = highYieldData.dates.slice(-365);
+                // Only display last year for chart, but use full data for returns
+                const oneYearChartData = this.getOneYearOfData(highYieldData.values, highYieldData.dates);
 
                 updates['highyield-chart'] = {
                     current: current,
                     change: extendedReturns['1W'] || 0,
                     changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
                     changeLabel: '1W',
-                    historicalData: oneYearData,
-                    dates: this.generateMonthlyLabels(oneYearDates, oneYearData),
-                    originalDates: oneYearDates,  // Preserve original dates for tooltips
+                    historicalData: oneYearChartData.values,
+                    dates: this.generateMonthlyLabels(oneYearChartData.dates, oneYearChartData.values),
+                    originalDates: oneYearChartData.dates,  // Preserve original dates for tooltips
                     observationDate: highYieldData.dates[highYieldData.dates.length - 1],
                     returns: extendedReturns,
                     seriesId: 'highYield'
@@ -1022,18 +1033,17 @@ class APIService {
                 const current = treasury2yrData.values[treasury2yrData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(treasury2yrData.values, treasury2yrData.dates);
 
-                // Only display last 365 days for chart, but use full data for returns
-                const oneYearData = treasury2yrData.values.slice(-365);
-                const oneYearDates = treasury2yrData.dates.slice(-365);
+                // Only display last year for chart, but use full data for returns
+                const oneYearChartData = this.getOneYearOfData(treasury2yrData.values, treasury2yrData.dates);
 
                 updates['2yr-chart'] = {
                     current: current,
                     change: extendedReturns['1W'] || 0,
                     changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
                     changeLabel: '1W',
-                    historicalData: oneYearData,
-                    dates: this.generateMonthlyLabels(oneYearDates, oneYearData),
-                    originalDates: oneYearDates,  // Preserve original dates for tooltips
+                    historicalData: oneYearChartData.values,
+                    dates: this.generateMonthlyLabels(oneYearChartData.dates, oneYearChartData.values),
+                    originalDates: oneYearChartData.dates,  // Preserve original dates for tooltips
                     observationDate: treasury2yrData.dates[treasury2yrData.dates.length - 1],
                     returns: extendedReturns,
                     seriesId: 'treasury2yr'
@@ -1050,18 +1060,17 @@ class APIService {
                 const current = treasury10yrData.values[treasury10yrData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(treasury10yrData.values, treasury10yrData.dates);
 
-                // Only display last 365 days for chart, but use full data for returns
-                const oneYearData = treasury10yrData.values.slice(-365);
-                const oneYearDates = treasury10yrData.dates.slice(-365);
+                // Only display last year for chart, but use full data for returns
+                const oneYearChartData = this.getOneYearOfData(treasury10yrData.values, treasury10yrData.dates);
 
                 updates['10yr-chart'] = {
                     current: current,
                     change: extendedReturns['1W'] || 0,
                     changeType: (extendedReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
                     changeLabel: '1W',
-                    historicalData: oneYearData,
-                    dates: this.generateMonthlyLabels(oneYearDates, oneYearData),
-                    originalDates: oneYearDates,  // Preserve original dates for tooltips
+                    historicalData: oneYearChartData.values,
+                    dates: this.generateMonthlyLabels(oneYearChartData.dates, oneYearChartData.values),
+                    originalDates: oneYearChartData.dates,  // Preserve original dates for tooltips
                     observationDate: treasury10yrData.dates[treasury10yrData.dates.length - 1],
                     returns: extendedReturns,
                     seriesId: 'treasury10yr'

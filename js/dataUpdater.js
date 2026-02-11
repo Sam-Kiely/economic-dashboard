@@ -162,8 +162,10 @@ class DataUpdater {
             }
         }
         
-        // Return the value if we found a reasonably close match (within 60 days for flexibility)
-        if (closestIndex >= 0 && minDifference <= 60 * 24 * 60 * 60 * 1000) { // 60 days in milliseconds
+        // Return the value if we found a reasonably close match
+        // For long-term data (3Y, 5Y), allow up to 180 days tolerance
+        const maxTolerance = daysBack > 730 ? 180 : 60; // Use 180 days for 3Y+ data, 60 for shorter
+        if (closestIndex >= 0 && minDifference <= maxTolerance * 24 * 60 * 60 * 1000) {
             return historicalData[closestIndex];
         }
         
@@ -536,8 +538,8 @@ class DataUpdater {
                 } else if (cardId.includes('newhomes')) {
                     valueElement.textContent = data.current.toFixed(0) + 'K';
                 } else if (cardId.includes('existinghomes')) {
-                    // Data is already in thousands, so divide by 1000 to get millions
-                    valueElement.textContent = (data.current / 1000).toFixed(2) + 'M';
+                    // Data is already in millions from FRED
+                    valueElement.textContent = data.current.toFixed(2) + 'M';
                 } else if (cardId.includes('sentiment')) {
                     valueElement.textContent = data.current.toFixed(1);
                 } else if (cardId.includes('bitcoin')) {

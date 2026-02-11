@@ -6,6 +6,14 @@ if (typeof ChartUtils !== 'undefined') {
     console.warn('⚠️ ChartUtils not available');
 }
 
+// Initialize calendar service
+if (typeof CalendarService !== 'undefined') {
+    window.calendarService = new CalendarService();
+    console.log('✅ CalendarService initialized');
+} else {
+    console.warn('⚠️ CalendarService not available');
+}
+
 // Update greeting based on time of day
 function updateGreeting() {
     const hour = new Date().getHours();
@@ -47,6 +55,10 @@ function switchTab(tabName, tabElement) {
     setTimeout(() => {
         if (tabName === 'economic') {
             initializeEconomicCharts();
+            // Initialize calendar
+            if (window.calendarService) {
+                window.calendarService.init('economic-calendar-container');
+            }
         } else if (tabName === 'markets') {
             initializeMarketCharts();
         } else if (tabName === 'rates') {
@@ -1924,6 +1936,12 @@ document.addEventListener('DOMContentLoaded', addPeriodReturnsToRates);
 
 // Fix Fed Funds period returns formatting to match other rate charts
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize the calendar on page load (economic tab is default)
+    if (window.calendarService) {
+        window.calendarService.init('economic-calendar-container');
+        console.log('✅ Calendar initialized on page load');
+    }
+
     setTimeout(() => {
         const fedFundsChart = document.getElementById('fedfunds-chart');
         if (fedFundsChart) {
