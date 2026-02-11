@@ -1158,14 +1158,17 @@ class APIService {
                     // Calculate period returns for spread (in basis points)
                     const spreadReturns = this.calculateExtendedReturnsForRates(spreadData.spreadValues, spreadData.dates);
 
+                    // Only display last year for chart, but use full data for returns
+                    const oneYearChartData = this.getOneYearOfData(spreadData.spreadValues, spreadData.dates);
+
                     updates['spread-chart'] = {
                         current: spreadData.current,
                         change: spreadReturns['1W'] || 0,
                         changeType: (spreadReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
                         changeLabel: '1W',
-                        historicalData: spreadData.spreadValues,
-                        dates: this.generateMonthlyLabels(spreadData.dates, spreadData.spreadValues),
-                        originalDates: spreadData.dates,  // Preserve original dates for tooltips
+                        historicalData: oneYearChartData.values,
+                        dates: this.generateMonthlyLabels(oneYearChartData.dates, oneYearChartData.values),
+                        originalDates: oneYearChartData.dates,  // Preserve original dates for tooltips
                         observationDate: spreadData.dates[spreadData.dates.length - 1],
                         returns: spreadReturns,
                         seriesId: '2s10s'
