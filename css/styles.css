@@ -559,6 +559,29 @@ body {
     color: #666;
 }
 
+.est-badge {
+    background: #f39c12;
+    color: white;
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 0.7em;
+    margin-left: 8px;
+}
+
+.event-item.estimated {
+    opacity: 0.85;
+    border-left-style: dashed;
+}
+
+.calendar-disclaimer {
+    text-align: center;
+    padding: 1rem;
+    color: #666;
+    border-top: 1px solid #eee;
+    margin-top: 1rem;
+    background: rgba(255, 255, 255, 0.8);
+}
+
 .footer {
     text-align: center;
     padding: 20px;
