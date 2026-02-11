@@ -250,8 +250,9 @@ class CalendarService {
             if (schedule.day && !schedule.daily && !schedule.weekly) {
                 // Check current and next two months for monthly releases
                 for (let monthOffset = -1; monthOffset <= 2; monthOffset++) {
-                    let releaseDate = new Date();
-                    releaseDate.setMonth(releaseDate.getMonth() + monthOffset);
+                    // Create a fresh date for each iteration to avoid date overflow issues
+                    const baseDate = new Date();
+                    let releaseDate = new Date(baseDate.getFullYear(), baseDate.getMonth() + monthOffset, 1);
                     
                     if (seriesId === 'unemployment') {
                         // First Friday of the month
@@ -311,17 +312,16 @@ class CalendarService {
             checkDate.setDate(checkDate.getDate() + 1);
         }
         
-        // Add FOMC meetings
+        // Add FOMC meetings for 2026
         const fomcDates = [
-            new Date('2024-12-18'), // Past FOMC for testing
-            new Date('2025-01-29'), 
-            new Date('2025-03-19'),
-            new Date('2025-05-07'), 
-            new Date('2025-06-18'),
-            new Date('2025-07-30'), 
-            new Date('2025-09-17'),
-            new Date('2025-11-05'), 
-            new Date('2025-12-17')
+            new Date('2026-01-28'), // January FOMC
+            new Date('2026-03-18'), // March FOMC
+            new Date('2026-05-06'), // May FOMC
+            new Date('2026-06-17'), // June FOMC
+            new Date('2026-07-29'), // July FOMC
+            new Date('2026-09-16'), // September FOMC
+            new Date('2026-11-04'), // November FOMC
+            new Date('2026-12-16')  // December FOMC
         ];
         
         fomcDates.forEach(date => {

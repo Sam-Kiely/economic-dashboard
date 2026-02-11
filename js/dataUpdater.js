@@ -622,7 +622,13 @@ class DataUpdater {
 
         // Update period returns for all rate cards
         if (isRateCard && data.returns) {
+            // Debug 5-Year Treasury specifically
+            if (cardId.includes('5yr')) {
+                console.log(`🔍 5-Year Treasury Debug: cardId=${cardId}, has returns=${!!data.returns}, returns=`, data.returns);
+            }
             this.updateRatePeriodReturns(card, data.returns);
+        } else if (isRateCard && cardId.includes('5yr')) {
+            console.log(`❌ 5-Year Treasury missing returns: cardId=${cardId}, has data.returns=${!!data.returns}`);
         }
         // Add H8-specific period changes (QTD and YoY Quarter)
         else if (cardId.includes('loans') || cardId.includes('deposits') || cardId.includes('borrowings') || cardId.includes('largetime')) {
@@ -1539,7 +1545,16 @@ class DataUpdater {
 
         const periodReturnsDiv = card.querySelector('.period-returns');
         if (!periodReturnsDiv) {
+            // Debug which card doesn't have period-returns
+            const cardTitle = card.querySelector('.card-title')?.textContent;
+            console.log(`❌ No period-returns div found for card: ${cardTitle}`);
             return; // No period returns section in this card
+        }
+
+        // Debug for 5-Year Treasury
+        const cardTitle = card.querySelector('.card-title')?.textContent;
+        if (cardTitle && cardTitle.includes('5-Year')) {
+            console.log(`🔍 updateRatePeriodReturns called for 5-Year Treasury, returns:`, returns);
         }
 
         // Map our return periods to the HTML elements

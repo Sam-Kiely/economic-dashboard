@@ -53,33 +53,52 @@ class APIService {
         return filtered;
     }
 
-    // FRED API Methods - VERCEL ONLY
-    async getFREDSeries(seriesId, limit = 13, frequency = null, forceRefresh = false) {
-        try {
-            const endDate = new Date().toISOString().split('T')[0];
-            const startDate = new Date();
+    // FRED API Methods - VERCEL ONLY with retry logic
+    async getFREDSeries(seriesId, limit = 13, frequency = null, forceRefresh = false, retryCount = 3) {
+        const maxRetries = retryCount;
+        let lastError = null;
 
-            // Calculate start date to fetch exactly the data we need (no extra buffer)
-            if (frequency === 'd' || !frequency) {
-                startDate.setDate(startDate.getDate() - limit);
-            } else if (frequency === 'w') {
-                startDate.setDate(startDate.getDate() - (limit * 7));
-            } else if (frequency === 'm') {
-                startDate.setMonth(startDate.getMonth() - limit);
-            } else if (frequency === 'q') {
-                startDate.setMonth(startDate.getMonth() - (limit * 3));
-            } else if (frequency === 'a') {
-                startDate.setFullYear(startDate.getFullYear() - limit);
-            }
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                const endDate = new Date().toISOString().split('T')[0];
+                const startDate = new Date();
 
-            const startDateStr = startDate.toISOString().split('T')[0];
+                // Calculate start date to fetch exactly the data we need (no extra buffer)
+                if (frequency === 'd' || !frequency) {
+                    startDate.setDate(startDate.getDate() - limit);
+                } else if (frequency === 'w') {
+                    startDate.setDate(startDate.getDate() - (limit * 7));
+                } else if (frequency === 'm') {
+                    startDate.setMonth(startDate.getMonth() - limit);
+                } else if (frequency === 'q') {
+                    startDate.setMonth(startDate.getMonth() - (limit * 3));
+                } else if (frequency === 'a') {
+                    startDate.setFullYear(startDate.getFullYear() - limit);
+                }
 
-            // Use Vercel API endpoint
-            const vercelUrl = `/api/fred?series=${seriesId}&start_date=${startDateStr}&end_date=${endDate}`;
-            console.log(`Fetching FRED data via Vercel API: ${seriesId}, start: ${startDateStr}, end: ${endDate}, limit: ${limit}, freq: ${frequency}`);
+                const startDateStr = startDate.toISOString().split('T')[0];
 
-            const response = await fetch(vercelUrl);
-            if (response.ok) {
+                // Use Vercel API endpoint
+                const vercelUrl = `/api/fred?series=${seriesId}&start_date=${startDateStr}&end_date=${endDate}`;
+                if (attempt === 1) {
+                    console.log(`Fetching FRED data via Vercel API: ${seriesId}, start: ${startDateStr}, end: ${endDate}, limit: ${limit}, freq: ${frequency}`);
+                } else {
+                    console.log(`🔄 Retry attempt ${attempt}/${maxRetries} for ${seriesId}`);
+                }
+
+                // Add timeout for fetch
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+
+                const response = await fetch(vercelUrl, {
+                    signal: controller.signal,
+                    headers: {
+                        'Cache-Control': 'no-cache'
+                    }
+                });
+                clearTimeout(timeoutId);
+
+                if (response.ok) {
                 const data = await response.json();
 
                 if (data && data.observations && data.observations.length > 0) {
@@ -120,11 +139,37 @@ class APIService {
                         };
                     }
                 }
-            } else {
-                console.error(`Vercel API failed for ${seriesId}: ${response.status}`);
+                } else {
+                    const errorMsg = `Vercel API failed for ${seriesId}: ${response.status}`;
+                    console.error(errorMsg);
+                    lastError = new Error(errorMsg);
+                }
+            } catch (error) {
+                lastError = error;
+                const isNetworkError = error.message.includes('ERR_NETWORK') ||
+                                      error.message.includes('ERR_INTERNET') ||
+                                      error.message.includes('Failed to fetch') ||
+                                      error.name === 'AbortError';
+
+                if (isNetworkError) {
+                    console.warn(`⚠️ Network error for ${seriesId} (attempt ${attempt}/${maxRetries}): ${error.message}`);
+                    if (attempt < maxRetries) {
+                        // Wait before retry with exponential backoff
+                        const delay = Math.min(1000 * Math.pow(2, attempt - 1), 5000);
+                        console.log(`⏳ Waiting ${delay}ms before retry...`);
+                        await new Promise(resolve => setTimeout(resolve, delay));
+                        continue;
+                    }
+                } else {
+                    console.error(`Error fetching FRED data for ${seriesId}:`, error.message);
+                    break; // Non-network errors don't retry
+                }
             }
-        } catch (error) {
-            console.error(`Error fetching FRED data for ${seriesId}:`, error.message);
+        }
+
+        // All retries exhausted
+        if (lastError) {
+            console.error(`❌ All retries exhausted for ${seriesId}. Last error:`, lastError.message);
         }
         return null;
     }
