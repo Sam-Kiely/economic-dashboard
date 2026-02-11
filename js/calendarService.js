@@ -42,6 +42,11 @@ class CalendarService {
         });
     }
 
+    // Refresh the calendar (alias for render)
+    refresh() {
+        this.render();
+    }
+
     // Render the calendar
     render() {
         if (!this.container || !this.initialized) {

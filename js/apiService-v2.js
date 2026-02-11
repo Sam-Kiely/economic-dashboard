@@ -1161,16 +1161,22 @@ class APIService {
                     // Only display last year for chart, but use full data for returns
                     const oneYearChartData = this.getOneYearOfData(spreadData.spreadValues, spreadData.dates);
 
+                    // Divide spread returns by 100 since spread values are already in basis points
+                    const adjustedSpreadReturns = {};
+                    for (const period in spreadReturns) {
+                        adjustedSpreadReturns[period] = spreadReturns[period] / 100;
+                    }
+
                     updates['spread-chart'] = {
                         current: spreadData.current,
-                        change: spreadReturns['1W'] || 0,
-                        changeType: (spreadReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
+                        change: adjustedSpreadReturns['1W'] || 0,
+                        changeType: (adjustedSpreadReturns['1W'] || 0) >= 0 ? 'positive' : 'negative',
                         changeLabel: '1W',
                         historicalData: oneYearChartData.values,
                         dates: this.generateMonthlyLabels(oneYearChartData.dates, oneYearChartData.values),
                         originalDates: oneYearChartData.dates,  // Preserve original dates for tooltips
                         observationDate: spreadData.dates[spreadData.dates.length - 1],
-                        returns: spreadReturns,
+                        returns: adjustedSpreadReturns,
                         seriesId: '2s10s'
                     };
                     console.log('✅ Updated 2s10s Spread:', spreadData.current, 'bps, Returns:', spreadReturns);

@@ -123,7 +123,7 @@ class DashboardCoordinator {
         } else if (typeof CalendarService !== 'undefined') {
             this.services.calendarService = new CalendarService();
             window.calendarService = this.services.calendarService;
-            this.services.calendarService.init();
+            this.services.calendarService.init('economic-calendar-container');
         }
         
         // Initialize Charts
@@ -392,8 +392,9 @@ class DashboardCoordinator {
 
     async updateCalendar() {
         if (!this.services.calendarService) return;
-        
-        this.services.calendarService.refresh();
+
+        // Call render instead of refresh
+        this.services.calendarService.render();
     }
 
     updateMarketCard(symbol, quote, historical, extendedReturns) {
