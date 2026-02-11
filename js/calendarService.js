@@ -1,9 +1,10 @@
-// Economic Calendar Service - Simple, reliable implementation
+// Economic Calendar Service - Shows past and upcoming releases with data
 class CalendarService {
     constructor() {
         this.selectedPeriod = 'this-week';
         this.container = null;
         this.initialized = false;
+        this.economicData = {};
     }
 
     // Initialize the calendar
@@ -18,8 +19,37 @@ class CalendarService {
 
         this.initialized = true;
         this.setupPeriodSelector();
+        this.fetchLatestData();
         this.render();
         return true;
+    }
+
+    // Fetch latest economic data from dashboard
+    fetchLatestData() {
+        // Get data from existing cards on the page
+        const dataMap = {
+            'CPI': { selector: '#cpi-chart .metric-value', seriesId: 'coreCPI' },
+            'PPI': { selector: '#ppi-chart .metric-value', seriesId: 'corePPI' },
+            'PCE': { selector: '#pce-chart .metric-value', seriesId: 'corePCE' },
+            'Jobs Report': { selector: '#unemployment-chart .metric-value', seriesId: 'unemployment' },
+            'GDP': { selector: '#gdp-chart .metric-value', seriesId: 'gdp' },
+            'Retail Sales': { selector: '#retail-chart .metric-value', seriesId: 'retailSales' },
+            'Jobless Claims': { selector: '#jobless-chart .metric-value', seriesId: 'joblessClaims' },
+            'Durable Goods': { selector: '#durablegoods-chart .metric-value', seriesId: 'durableGoods' },
+            'New Home Sales': { selector: '#newhomes-chart .metric-value', seriesId: 'newHomeSales' },
+            'Existing Home Sales': { selector: '#existinghomes-chart .metric-value', seriesId: 'existingHomeSales' },
+            'Consumer Sentiment': { selector: '#sentiment-chart .metric-value', seriesId: 'consumerSentiment' }
+        };
+
+        for (const [name, config] of Object.entries(dataMap)) {
+            const element = document.querySelector(config.selector);
+            if (element) {
+                this.economicData[name] = {
+                    current: element.textContent,
+                    previous: null // Would need historical data
+                };
+            }
+        }
     }
 
     // Setup period selector
@@ -44,6 +74,7 @@ class CalendarService {
 
     // Refresh the calendar (alias for render)
     refresh() {
+        this.fetchLatestData();
         this.render();
     }
 
@@ -99,10 +130,14 @@ class CalendarService {
                 `;
 
                 grouped[dateStr].forEach(event => {
+                    const dataValue = this.economicData[event.displayName] || {};
+                    const hasData = event.isReleased && dataValue.current;
+
                     html += `
-                        <div class="event-item impact-${event.impact}">
+                        <div class="event-item impact-${event.impact} ${event.isReleased ? 'released' : ''}">
                             <span class="event-time">${event.time}</span>
                             <span class="event-name">${event.name}</span>
+                            ${hasData ? `<span class="event-data">Actual: ${dataValue.current}</span>` : ''}
                             <span class="event-impact ${event.impact}">${event.impact.toUpperCase()}</span>
                         </div>
                     `;
@@ -135,6 +170,9 @@ class CalendarService {
 
         let startDate = new Date(today);
         let endDate = new Date(today);
+
+        // For "today" and "this-week", include past events
+        const includePast = this.selectedPeriod === 'today' || this.selectedPeriod === 'this-week';
 
         // Calculate date ranges
         switch(this.selectedPeriod) {
@@ -176,38 +214,44 @@ class CalendarService {
 
         console.log('Date range:', startDate.toLocaleDateString(), 'to', endDate.toLocaleDateString());
 
-        // Define all economic events for 2026
+        // Define all economic events for 2026 with indicator mapping
         const allEvents = [
-            // February 2026
-            { date: new Date('2026-02-12T08:30:00'), name: 'Initial Jobless Claims', impact: 'medium' },
-            { date: new Date('2026-02-12T08:30:00'), name: 'CPI (Jan)', impact: 'high' },
-            { date: new Date('2026-02-13T08:30:00'), name: 'PPI (Jan)', impact: 'medium' },
-            { date: new Date('2026-02-13T10:00:00'), name: 'Consumer Sentiment (Prelim)', impact: 'low' },
-            { date: new Date('2026-02-17T08:30:00'), name: 'Retail Sales (Jan)', impact: 'medium' },
-            { date: new Date('2026-02-19T08:30:00'), name: 'Initial Jobless Claims', impact: 'medium' },
-            { date: new Date('2026-02-20T10:00:00'), name: 'Existing Home Sales (Jan)', impact: 'low' },
-            { date: new Date('2026-02-24T10:00:00'), name: 'New Home Sales (Jan)', impact: 'low' },
-            { date: new Date('2026-02-26T08:30:00'), name: 'Initial Jobless Claims', impact: 'medium' },
-            { date: new Date('2026-02-26T08:30:00'), name: 'GDP Q4 2025 (2nd Est)', impact: 'high' },
-            { date: new Date('2026-02-26T08:30:00'), name: 'Durable Goods (Jan)', impact: 'medium' },
-            { date: new Date('2026-02-27T08:30:00'), name: 'PCE Price Index (Jan)', impact: 'high' },
-            { date: new Date('2026-02-27T10:00:00'), name: 'Consumer Sentiment (Final)', impact: 'low' },
+            // Past releases (for demonstration)
+            { date: new Date('2026-02-06T08:30:00'), name: 'Jobs Report (Jan)', displayName: 'Jobs Report', impact: 'high', seriesId: 'unemployment' },
+            { date: new Date('2026-02-06T08:30:00'), name: 'Unemployment Rate (Jan)', displayName: 'Jobs Report', impact: 'high', seriesId: 'unemployment' },
+
+            // This week (Feb 8-14, 2026)
+            { date: new Date('2026-02-11T08:30:00'), name: 'CPI (Jan)', displayName: 'CPI', impact: 'high', seriesId: 'coreCPI' },
+            { date: new Date('2026-02-12T08:30:00'), name: 'Initial Jobless Claims', displayName: 'Jobless Claims', impact: 'medium', seriesId: 'joblessClaims' },
+            { date: new Date('2026-02-13T08:30:00'), name: 'PPI (Jan)', displayName: 'PPI', impact: 'medium', seriesId: 'corePPI' },
+            { date: new Date('2026-02-13T10:00:00'), name: 'Consumer Sentiment (Prelim)', displayName: 'Consumer Sentiment', impact: 'low', seriesId: 'consumerSentiment' },
+
+            // Next week
+            { date: new Date('2026-02-17T08:30:00'), name: 'Retail Sales (Jan)', displayName: 'Retail Sales', impact: 'medium', seriesId: 'retailSales' },
+            { date: new Date('2026-02-19T08:30:00'), name: 'Initial Jobless Claims', displayName: 'Jobless Claims', impact: 'medium', seriesId: 'joblessClaims' },
+            { date: new Date('2026-02-20T10:00:00'), name: 'Existing Home Sales (Jan)', displayName: 'Existing Home Sales', impact: 'low', seriesId: 'existingHomeSales' },
+            { date: new Date('2026-02-24T10:00:00'), name: 'New Home Sales (Jan)', displayName: 'New Home Sales', impact: 'low', seriesId: 'newHomeSales' },
+            { date: new Date('2026-02-26T08:30:00'), name: 'Initial Jobless Claims', displayName: 'Jobless Claims', impact: 'medium', seriesId: 'joblessClaims' },
+            { date: new Date('2026-02-26T08:30:00'), name: 'GDP Q4 2025 (2nd Est)', displayName: 'GDP', impact: 'high', seriesId: 'gdp' },
+            { date: new Date('2026-02-26T08:30:00'), name: 'Durable Goods (Jan)', displayName: 'Durable Goods', impact: 'medium', seriesId: 'durableGoods' },
+            { date: new Date('2026-02-27T08:30:00'), name: 'PCE Price Index (Jan)', displayName: 'PCE', impact: 'high', seriesId: 'corePCE' },
+            { date: new Date('2026-02-27T10:00:00'), name: 'Consumer Sentiment (Final)', displayName: 'Consumer Sentiment', impact: 'low', seriesId: 'consumerSentiment' },
 
             // March 2026
-            { date: new Date('2026-03-05T08:30:00'), name: 'Initial Jobless Claims', impact: 'medium' },
-            { date: new Date('2026-03-06T08:30:00'), name: 'Jobs Report (Feb)', impact: 'high' },
-            { date: new Date('2026-03-10T08:30:00'), name: 'Trade Balance (Jan)', impact: 'low' },
-            { date: new Date('2026-03-12T08:30:00'), name: 'CPI (Feb)', impact: 'high' },
-            { date: new Date('2026-03-12T08:30:00'), name: 'Initial Jobless Claims', impact: 'medium' },
-            { date: new Date('2026-03-13T08:30:00'), name: 'PPI (Feb)', impact: 'medium' },
-            { date: new Date('2026-03-17T08:30:00'), name: 'Retail Sales (Feb)', impact: 'medium' },
-            { date: new Date('2026-03-18T14:00:00'), name: 'FOMC Rate Decision', impact: 'high' },
-            { date: new Date('2026-03-19T08:30:00'), name: 'Initial Jobless Claims', impact: 'medium' },
-            { date: new Date('2026-03-20T10:00:00'), name: 'Existing Home Sales (Feb)', impact: 'low' },
-            { date: new Date('2026-03-24T10:00:00'), name: 'New Home Sales (Feb)', impact: 'low' },
-            { date: new Date('2026-03-26T08:30:00'), name: 'Initial Jobless Claims', impact: 'medium' },
-            { date: new Date('2026-03-26T08:30:00'), name: 'GDP Q4 2025 (Final)', impact: 'medium' },
-            { date: new Date('2026-03-27T08:30:00'), name: 'PCE Price Index (Feb)', impact: 'high' }
+            { date: new Date('2026-03-05T08:30:00'), name: 'Initial Jobless Claims', displayName: 'Jobless Claims', impact: 'medium', seriesId: 'joblessClaims' },
+            { date: new Date('2026-03-06T08:30:00'), name: 'Jobs Report (Feb)', displayName: 'Jobs Report', impact: 'high', seriesId: 'unemployment' },
+            { date: new Date('2026-03-10T08:30:00'), name: 'Trade Balance (Jan)', displayName: 'Trade Balance', impact: 'low', seriesId: 'tradeDeficit' },
+            { date: new Date('2026-03-12T08:30:00'), name: 'CPI (Feb)', displayName: 'CPI', impact: 'high', seriesId: 'coreCPI' },
+            { date: new Date('2026-03-12T08:30:00'), name: 'Initial Jobless Claims', displayName: 'Jobless Claims', impact: 'medium', seriesId: 'joblessClaims' },
+            { date: new Date('2026-03-13T08:30:00'), name: 'PPI (Feb)', displayName: 'PPI', impact: 'medium', seriesId: 'corePPI' },
+            { date: new Date('2026-03-17T08:30:00'), name: 'Retail Sales (Feb)', displayName: 'Retail Sales', impact: 'medium', seriesId: 'retailSales' },
+            { date: new Date('2026-03-18T14:00:00'), name: 'FOMC Rate Decision', displayName: 'FOMC', impact: 'high', seriesId: 'fomc' },
+            { date: new Date('2026-03-19T08:30:00'), name: 'Initial Jobless Claims', displayName: 'Jobless Claims', impact: 'medium', seriesId: 'joblessClaims' },
+            { date: new Date('2026-03-20T10:00:00'), name: 'Existing Home Sales (Feb)', displayName: 'Existing Home Sales', impact: 'low', seriesId: 'existingHomeSales' },
+            { date: new Date('2026-03-24T10:00:00'), name: 'New Home Sales (Feb)', displayName: 'New Home Sales', impact: 'low', seriesId: 'newHomeSales' },
+            { date: new Date('2026-03-26T08:30:00'), name: 'Initial Jobless Claims', displayName: 'Jobless Claims', impact: 'medium', seriesId: 'joblessClaims' },
+            { date: new Date('2026-03-26T08:30:00'), name: 'GDP Q4 2025 (Final)', displayName: 'GDP', impact: 'medium', seriesId: 'gdp' },
+            { date: new Date('2026-03-27T08:30:00'), name: 'PCE Price Index (Feb)', displayName: 'PCE', impact: 'high', seriesId: 'corePCE' }
         ];
 
         // Filter events for the selected period
@@ -215,10 +259,12 @@ class CalendarService {
             event.date >= startDate && event.date <= endDate
         );
 
-        // Add formatted time to each event
+        // Add formatted time and check if released
+        const currentTime = new Date();
         return filteredEvents.map(event => ({
             ...event,
-            time: this.formatTime(event.date)
+            time: this.formatTime(event.date),
+            isReleased: event.date < currentTime
         })).sort((a, b) => a.date - b.date);
     }
 

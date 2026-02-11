@@ -497,6 +497,11 @@ body {
     border-left: 3px solid #ccc;
 }
 
+.event-item.released {
+    opacity: 0.8;
+    background: rgba(240, 240, 240, 0.5);
+}
+
 .event-item.impact-high {
     border-left-color: #e74c3c;
 }
@@ -518,6 +523,16 @@ body {
 .event-name {
     flex: 1;
     color: #333;
+}
+
+.event-data {
+    margin: 0 15px;
+    color: #2c3e50;
+    font-weight: 600;
+    font-size: 0.9em;
+    background: rgba(46, 204, 113, 0.1);
+    padding: 2px 8px;
+    border-radius: 4px;
 }
 
 .event-impact {
