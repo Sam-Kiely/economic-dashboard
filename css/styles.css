@@ -325,6 +325,33 @@ body {
     color: white;
 }
 
+/* Period selector styles */
+.period-selector {
+    display: flex;
+    gap: 10px;
+}
+
+.period-btn {
+    padding: 8px 16px;
+    border-radius: 20px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    font-size: 0.9rem;
+    color: #666;
+    background: #f5f5f5;
+    border: none;
+    outline: none;
+}
+
+.period-btn:hover {
+    background: #e0e0e0;
+}
+
+.period-btn.active {
+    background: #2c3e50;
+    color: white;
+}
+
 .calendar-date {
     font-weight: 600;
     color: #2c3e50;
@@ -429,6 +456,92 @@ body {
     padding: 40px;
     color: #999;
     font-style: italic;
+}
+
+/* Calendar Events Container */
+.calendar-events {
+    padding: 1rem 0;
+}
+
+.event-date {
+    margin-bottom: 1.5rem;
+}
+
+.date-header {
+    font-weight: bold;
+    margin-bottom: 0.75rem;
+    color: #333;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.today-badge {
+    background: #2ecc71;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+}
+
+.date-events {
+    margin-left: 1rem;
+}
+
+.event-item {
+    display: flex;
+    align-items: center;
+    padding: 0.5rem 0;
+    padding-left: 0.5rem;
+    margin-bottom: 0.25rem;
+    border-left: 3px solid #ccc;
+}
+
+.event-item.impact-high {
+    border-left-color: #e74c3c;
+}
+
+.event-item.impact-medium {
+    border-left-color: #f39c12;
+}
+
+.event-item.impact-low {
+    border-left-color: #95a5a6;
+}
+
+.event-time {
+    min-width: 90px;
+    color: #666;
+    font-size: 0.9em;
+}
+
+.event-name {
+    flex: 1;
+    color: #333;
+}
+
+.event-impact {
+    font-size: 0.8em;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.event-impact.high {
+    color: #e74c3c;
+}
+
+.event-impact.medium {
+    color: #f39c12;
+}
+
+.event-impact.low {
+    color: #95a5a6;
+}
+
+.no-events {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
 }
 
 .footer {

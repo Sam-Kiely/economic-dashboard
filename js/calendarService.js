@@ -56,7 +56,7 @@ class CalendarService {
 
             if (!events || events.length === 0) {
                 this.container.innerHTML = `
-                    <div class="no-events" style="text-align: center; padding: 2rem; color: #666;">
+                    <div class="no-events">
                         <p>No economic events scheduled for this period</p>
                     </div>
                 `;
@@ -74,7 +74,7 @@ class CalendarService {
             });
 
             // Build HTML
-            let html = '<div class="calendar-events" style="padding: 1rem;">';
+            let html = '<div class="calendar-events">';
 
             const today = new Date();
             today.setHours(0, 0, 0, 0);
@@ -85,23 +85,20 @@ class CalendarService {
                 const isPast = date < today;
 
                 html += `
-                    <div class="event-date" style="margin-bottom: 1.5rem; ${isPast ? 'opacity: 0.6;' : ''}">
-                        <div class="date-header" style="font-weight: bold; margin-bottom: 0.5rem; color: #333;">
+                    <div class="event-date ${isPast ? 'past' : ''}">
+                        <div class="date-header">
                             <span>${this.formatDateLabel(date)}</span>
-                            ${isToday ? '<span style="background: #2ecc71; color: white; padding: 2px 8px; border-radius: 4px; margin-left: 10px; font-size: 0.8em;">TODAY</span>' : ''}
+                            ${isToday ? '<span class="today-badge">TODAY</span>' : ''}
                         </div>
-                        <div class="date-events" style="margin-left: 1rem;">
+                        <div class="date-events">
                 `;
 
                 grouped[dateStr].forEach(event => {
-                    const impactColor = event.impact === 'high' ? '#e74c3c' :
-                                       event.impact === 'medium' ? '#f39c12' : '#95a5a6';
-
                     html += `
-                        <div class="event-item" style="display: flex; align-items: center; padding: 0.5rem 0; border-left: 3px solid ${impactColor}; padding-left: 0.5rem; margin-bottom: 0.25rem;">
-                            <span style="min-width: 80px; color: #666; font-size: 0.9em;">${event.time}</span>
-                            <span style="flex: 1; color: #333;">${event.name}</span>
-                            <span style="color: ${impactColor}; font-size: 0.8em; font-weight: bold;">${event.impact.toUpperCase()}</span>
+                        <div class="event-item impact-${event.impact}">
+                            <span class="event-time">${event.time}</span>
+                            <span class="event-name">${event.name}</span>
+                            <span class="event-impact ${event.impact}">${event.impact.toUpperCase()}</span>
                         </div>
                     `;
                 });
@@ -119,7 +116,7 @@ class CalendarService {
         } catch (error) {
             console.error('Error rendering calendar:', error);
             this.container.innerHTML = `
-                <div class="error" style="text-align: center; padding: 2rem; color: #e74c3c;">
+                <div class="no-events">
                     <p>Error loading calendar events</p>
                 </div>
             `;

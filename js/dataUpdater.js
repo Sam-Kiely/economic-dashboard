@@ -538,8 +538,8 @@ class DataUpdater {
                 } else if (cardId.includes('newhomes')) {
                     valueElement.textContent = data.current.toFixed(0) + 'K';
                 } else if (cardId.includes('existinghomes')) {
-                    // Data from FRED is in thousands, convert to millions
-                    const millionsValue = data.current / 1000;
+                    // Data from FRED needs double conversion: first /1000 for correct value, then /1000 for millions
+                    const millionsValue = data.current / 1000 / 1000;
                     valueElement.textContent = millionsValue.toFixed(2) + 'M';
                 } else if (cardId.includes('sentiment')) {
                     valueElement.textContent = data.current.toFixed(1);
