@@ -1058,15 +1058,22 @@ class BankingService {
                 
                 // Process data if quote is valid
                 if (quote && quote.price && typeof quote.price === 'number' && !isNaN(quote.price)) {
+                    // Calculate returns with date awareness
+                    const now = new Date();
+                    const oneWeekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+                    const oneYearAgo = new Date(now.getTime() - 365 * 24 * 60 * 60 * 1000);
+                    const threeYearsAgo = new Date(now.getTime() - 3 * 365 * 24 * 60 * 60 * 1000);
+                    const fiveYearsAgo = new Date(now.getTime() - 5 * 365 * 24 * 60 * 60 * 1000);
+
                     peerInfo = {
                         ticker: ticker,
                         price: quote.price || 0,
                         change1d: (quote.changePercent && !isNaN(quote.changePercent)) ? quote.changePercent : 0,
-                        change1w: historical ? this.calculateReturn(historical?.prices, 5) : 0,
+                        change1w: historical ? this.calculateReturnByDate(historical?.prices, historical?.dates, oneWeekAgo) : 0,
                         ytd: historical ? this.calculateYTDReturn(historical?.prices, historical?.dates) : 0,
-                        change1y: historical ? this.calculateReturn(historical?.prices, 252) : 0,
-                        change3y: historical ? this.calculateReturn(historical?.prices, 756) : 0,
-                        change5y: historical ? this.calculateReturn(historical?.prices, 1260) : 0,
+                        change1y: historical ? this.calculateReturnByDate(historical?.prices, historical?.dates, oneYearAgo) : 0,
+                        change3y: historical ? this.calculateReturnByDate(historical?.prices, historical?.dates, threeYearsAgo) : 0,
+                        change5y: historical ? this.calculateReturnByDate(historical?.prices, historical?.dates, fiveYearsAgo) : 0,
                         isTCBI: ticker === 'TCBI',
                         isIndex: ticker === '^KRX',
                         hasPartialData: !historical // Flag if historical data missing
@@ -1153,11 +1160,38 @@ class BankingService {
         return fallbackData;
     }
 
-    // Calculate return over specified days
+    // Calculate return over specified days (handle non-trading days)
     calculateReturn(prices, days) {
-        if (!prices || !Array.isArray(prices) || prices.length < days) return 0;
+        if (!prices || !Array.isArray(prices) || prices.length < 2) return 0;
+
         const current = prices[prices.length - 1];
-        const previous = prices[prices.length - days];
+        // If we don't have enough data for exact days, use what we have
+        const targetIndex = Math.max(0, prices.length - days);
+        const previous = prices[targetIndex];
+
+        if (typeof current !== 'number' || typeof previous !== 'number' || previous === 0) return 0;
+        return ((current - previous) / previous) * 100;
+    }
+
+    // Calculate return for specific date ranges
+    calculateReturnByDate(prices, dates, targetDate) {
+        if (!prices || !dates || !Array.isArray(prices) || !Array.isArray(dates) || prices.length === 0) return 0;
+
+        const current = prices[prices.length - 1];
+
+        // Find the closest date to target
+        let closestIndex = 0;
+        let closestDistance = Math.abs(new Date(dates[0]) - targetDate);
+
+        for (let i = 1; i < dates.length; i++) {
+            const distance = Math.abs(new Date(dates[i]) - targetDate);
+            if (distance < closestDistance) {
+                closestDistance = distance;
+                closestIndex = i;
+            }
+        }
+
+        const previous = prices[closestIndex];
         if (typeof current !== 'number' || typeof previous !== 'number' || previous === 0) return 0;
         return ((current - previous) / previous) * 100;
     }

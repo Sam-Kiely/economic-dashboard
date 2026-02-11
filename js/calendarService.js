@@ -211,15 +211,15 @@ class CalendarService {
                 periodEnd.setHours(23, 59, 59, 999);
                 break;
             case 'this-week':
-                // From start of this week (Sunday) to end of this week (Saturday)
+                // From 3 days ago to end of this week (to show recent releases)
                 const startOfWeek = new Date(today);
-                startOfWeek.setDate(today.getDate() - today.getDay()); // Start of week (Sunday)
+                startOfWeek.setDate(today.getDate() - 3); // Include last 3 days
                 startOfWeek.setHours(0, 0, 0, 0);
-                
-                const endOfWeek = new Date(startOfWeek);
-                endOfWeek.setDate(startOfWeek.getDate() + 6); // End of week (Saturday)
+
+                const endOfWeek = new Date(today);
+                endOfWeek.setDate(today.getDate() - today.getDay() + 6); // End of week (Saturday)
                 endOfWeek.setHours(23, 59, 59, 999);
-                
+
                 periodStart = startOfWeek;
                 periodEnd = endOfWeek;
                 break;

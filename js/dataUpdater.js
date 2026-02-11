@@ -90,7 +90,50 @@ class DataUpdater {
                 console.log(`5Y result: ${changes['5Y']}%`);
             }
         }
-        
+
+        // QTD (Quarter-to-Date) - Change from beginning of current quarter
+        const currentDate = new Date();
+        const currentQuarter = Math.floor((currentDate.getMonth()) / 3);
+        const quarterStartMonth = currentQuarter * 3;
+        const quarterStart = new Date(currentDate.getFullYear(), quarterStartMonth, 1);
+
+        let qtdStartIndex = -1;
+        for (let i = 0; i < dates.length; i++) {
+            const date = new Date(dates[i]);
+            if (date >= quarterStart) {
+                qtdStartIndex = i;
+                break;
+            }
+        }
+        if (qtdStartIndex >= 0 && qtdStartIndex < historicalData.length - 1) {
+            const qtdStart = historicalData[qtdStartIndex];
+            if (qtdStart !== 0) {
+                changes['QTD'] = ((current - qtdStart) / qtdStart) * 100;
+            }
+        }
+
+        // YoY Qtr (Year-over-Year Quarter) - Change from same quarter last year
+        const lastYearQuarterStart = new Date(currentDate.getFullYear() - 1, quarterStartMonth, 1);
+        const lastYearQuarterEnd = new Date(currentDate.getFullYear() - 1, quarterStartMonth + 3, 0);
+
+        let yoyQtrValue = null;
+        for (let i = 0; i < dates.length; i++) {
+            const date = new Date(dates[i]);
+            if (date >= lastYearQuarterStart && date <= lastYearQuarterEnd) {
+                // Find the closest date to current day last year quarter
+                const dayOfQuarter = Math.floor((currentDate - quarterStart) / (1000 * 60 * 60 * 24));
+                const targetDate = new Date(lastYearQuarterStart.getTime() + (dayOfQuarter * 1000 * 60 * 60 * 24));
+
+                // Find closest match
+                if (!yoyQtrValue || Math.abs(date - targetDate) < Math.abs(new Date(dates[yoyQtrValue]) - targetDate)) {
+                    yoyQtrValue = i;
+                }
+            }
+        }
+        if (yoyQtrValue !== null && historicalData[yoyQtrValue] !== 0) {
+            changes['YoY Qtr'] = ((current - historicalData[yoyQtrValue]) / historicalData[yoyQtrValue]) * 100;
+        }
+
         return changes;
     }
 
@@ -369,23 +412,56 @@ class DataUpdater {
 
     // Update a specific card with new data
     updateCard(cardId, data) {
+        // Enhanced debugging for GDP
+        if (cardId === 'gdp-chart') {
+            console.log('📊 GDP: updateCard called with:', {
+                cardId,
+                dataKeys: Object.keys(data || {}),
+                current: data?.current,
+                historicalDataLength: data?.historicalData?.length,
+                datesLength: data?.dates?.length
+            });
+        }
+
         // Find the chart element first
         const chartElement = document.getElementById(cardId);
         if (!chartElement) {
             console.warn(`Chart element not found: ${cardId}`);
+            if (cardId === 'gdp-chart') {
+                console.error('📊 GDP: Chart element not found in DOM!');
+            }
             return;
         }
-        
+
         const card = chartElement.closest('.card');
         if (!card) {
             console.warn(`Card not found for chart: ${cardId}`);
+            if (cardId === 'gdp-chart') {
+                console.error('📊 GDP: Card element not found!');
+            }
             return;
         }
 
         console.log(`Updating card for ${cardId}`, data);
 
+        // Enhanced debugging for GDP
+        if (cardId === 'gdp-chart') {
+            console.log('📊 GDP: Chart element found, proceeding with update');
+        }
+
         // Update observation date - skip for rate cards (daily market data doesn't need "as of" dates)
         const isRateCard = ['2yr', '10yr', '30yr', '5yr', 'sofr', 'fedfunds', 'tbill', 'highyield', 'spread', 'mortgage', 'prime'].some(rate => cardId.includes(rate));
+
+        // Auto-setup tooltips for rate charts when they update
+        if (isRateCard && chartElement && chartElement.chart) {
+            console.log(`🔧 Auto-setting up tooltips for rate card ${cardId}`);
+            // Use setTimeout to ensure chart is fully updated before setting up tooltips
+            setTimeout(() => {
+                this.setupChartTooltips(chartElement.chart, cardId);
+                console.log(`✅ Auto-setup tooltips completed for ${cardId}`);
+            }, 100);
+        }
+
         const dateElement = card.querySelector('.card-date');
 
         if (dateElement && !isRateCard) {
@@ -430,6 +506,10 @@ class DataUpdater {
         // Update value
         const valueElement = card.querySelector('.card-value');
         if (valueElement && data.current !== undefined) {
+            // Debug Large Time Deposits issue
+            if (cardId.includes('largetime')) {
+                console.log(`🔍 LARGETIME DEBUG: CardId=${cardId}, Current=${data.current}, SeriesId=${data.seriesId}, DataKeys=${Object.keys(data)}`);
+            }
             if (typeof data.current === 'number') {
                 // Format based on the type of data
                 if (cardId.includes('trade')) {
@@ -456,19 +536,26 @@ class DataUpdater {
                 } else if (cardId.includes('newhomes')) {
                     valueElement.textContent = data.current.toFixed(0) + 'K';
                 } else if (cardId.includes('existinghomes')) {
-                    valueElement.textContent = data.current.toFixed(1) + 'M';
+                    // Data is already in thousands, so divide by 1000 to get millions
+                    valueElement.textContent = (data.current / 1000).toFixed(2) + 'M';
                 } else if (cardId.includes('sentiment')) {
                     valueElement.textContent = data.current.toFixed(1);
                 } else if (cardId.includes('bitcoin')) {
-                    valueElement.textContent = '$' + data.current.toLocaleString('en-US', { 
-                        minimumFractionDigits: 0, 
-                        maximumFractionDigits: 0 
+                    valueElement.textContent = '$' + data.current.toLocaleString('en-US', {
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
                     });
                 } else if (cardId.includes('sp500') || cardId.includes('dow') || cardId.includes('nasdaq')) {
-                    valueElement.textContent = data.current.toLocaleString('en-US', { 
-                        minimumFractionDigits: 2, 
-                        maximumFractionDigits: 2 
+                    valueElement.textContent = data.current.toLocaleString('en-US', {
+                        minimumFractionDigits: 2,
+                        maximumFractionDigits: 2
                     });
+                } else if (cardId.includes('largetime')) {
+                    // Large Time Deposits in Trillions
+                    valueElement.textContent = '$' + data.current.toFixed(3) + 'Tn';
+                } else if (cardId.includes('loans') || cardId.includes('deposits') || cardId.includes('borrowings')) {
+                    // H8 banking data already converted to Trillions in apiService-v2
+                    valueElement.textContent = '$' + data.current.toFixed(3) + 'Tn';
                 } else {
                     valueElement.textContent = data.current.toFixed(1) + '%';
                 }
@@ -533,13 +620,15 @@ class DataUpdater {
             }
         }
 
-        // Special handling for Fed Funds to use extendedReturns like SOFR
-        if (cardId === 'fedfunds-chart' && data.extendedReturns) {
-            this.updateFedFundsPeriodChanges(card, data.extendedReturns);
+        // Update period returns for all rate cards
+        if (isRateCard && data.returns) {
+            this.updateRatePeriodReturns(card, data.returns);
         }
-        // Special handling for Treasury rates to use extendedReturns like SOFR
-        else if ((cardId === '2yr-chart' || cardId === '5yr-chart' || cardId === '10yr-chart' || cardId === '30yr-chart') && data.extendedReturns) {
-            this.updateRatePeriodReturns(cardId, data.extendedReturns);
+        // Add H8-specific period changes (QTD and YoY Quarter)
+        else if (cardId.includes('loans') || cardId.includes('deposits') || cardId.includes('borrowings') || cardId.includes('largetime')) {
+            if (data.h8Changes) {
+                this.updateH8PeriodChanges(card, data.h8Changes);
+            }
         }
         // Add period changes display ONLY for Markets tab (not rates)
         else if (this.shouldShowPeriodChanges(cardId) && data.historicalData && data.dates) {
@@ -557,12 +646,29 @@ class DataUpdater {
 
         // Update chart if data available
         if (data.historicalData && data.dates && chartElement) {
-            this.updateChart(cardId, data.historicalData, data.dates);
+            if (cardId === 'gdp-chart') {
+                console.log('📊 GDP: Calling updateChart with:', {
+                    historicalDataLength: data.historicalData.length,
+                    datesLength: data.dates.length,
+                    historicalData: data.historicalData,
+                    dates: data.dates
+                });
+            }
+            // Pass originalDates if available for proper tooltip formatting
+            this.updateChart(cardId, data.historicalData, data.dates, data.originalDates);
+        } else if (cardId === 'gdp-chart') {
+            console.error('📊 GDP: Chart update skipped - missing data:', {
+                hasHistoricalData: !!data.historicalData,
+                historicalDataLength: data.historicalData?.length || 0,
+                hasDates: !!data.dates,
+                datesLength: data.dates?.length || 0,
+                hasChartElement: !!chartElement
+            });
         }
 
         // Update period returns for rate cards
         if (isRateCard && data.returns && Object.keys(data.returns).length > 0) {
-            this.updateRatePeriodReturns(cardId, data.returns);
+            this.updateRatePeriodReturns(card, data.returns);
         }
 
         // Store treasury data for spread calculation
@@ -579,19 +685,45 @@ class DataUpdater {
     }
 
     // Update a chart with new data
-    updateChart(chartId, data, labels) {
+    updateChart(chartId, data, labels, originalDates = null) {
         // Rate charts are now handled by the unified apiService-v2 system
         // No special handling needed - all charts use the same update mechanism
         console.log(`📊 Updating chart ${chartId} with data:`, { dataPoints: data?.length, labelCount: labels?.length });
-        
+
+        // Enhanced debugging for GDP
+        if (chartId === 'gdp-chart') {
+            console.log('📊 GDP: updateChart called with:', {
+                chartId,
+                dataLength: data?.length,
+                labelsLength: labels?.length,
+                data: data,
+                labels: labels
+            });
+        }
+
         const chartElement = document.getElementById(chartId);
         if (!chartElement) {
             console.warn(`Chart element not found: ${chartId}`);
+            if (chartId === 'gdp-chart') {
+                console.error('📊 GDP: Chart element missing in updateChart');
+            }
             return;
+        }
+
+        // Enhanced debugging for GDP
+        if (chartId === 'gdp-chart') {
+            console.log('📊 GDP: Chart element found, checking if chart exists:', {
+                hasChart: !!chartElement.chart,
+                elementId: chartElement.id,
+                elementTagName: chartElement.tagName
+            });
         }
 
         // Initialize chart if it doesn't exist
         if (!chartElement.chart) {
+            if (chartId === 'gdp-chart') {
+                console.log('📊 GDP: Initializing chart for the first time');
+            }
             const chartConfig = {
                 type: 'line',
                 data: {
@@ -615,6 +747,33 @@ class DataUpdater {
                         tooltip: {
                             mode: 'index',
                             intersect: false,
+                            callbacks: {
+                                title: function(context) {
+                                    // Use original dates for tooltip if available
+                                    if (context[0].chart.data.originalDates && context[0].chart.data.originalDates[context[0].dataIndex]) {
+                                        const date = new Date(context[0].chart.data.originalDates[context[0].dataIndex]);
+                                        return (date.getMonth() + 1) + '/' + date.getDate() + '/' + date.getFullYear();
+                                    }
+                                    return context[0].label;
+                                },
+                                label: function(context) {
+                                    // Check if this is a rate chart and format appropriately
+                                    const chartId = context.chart.canvas.id;
+                                    if (chartId && (chartId.includes('yr-chart') || chartId.includes('fedfunds') ||
+                                        chartId.includes('sofr') || chartId.includes('tbill') ||
+                                        chartId.includes('mortgage') || chartId.includes('highyield') ||
+                                        chartId.includes('prime'))) {
+                                        // Format rates with 2 decimal places
+                                        return context.parsed.y.toFixed(2) + '%';
+                                    } else if (chartId && chartId.includes('spread')) {
+                                        // Format spread in basis points
+                                        return context.parsed.y.toFixed(0) + ' bps';
+                                    } else {
+                                        // Default formatting for other charts
+                                        return context.parsed.y.toFixed(2);
+                                    }
+                                }
+                            }
                         }
                     },
                     scales: {
@@ -648,25 +807,67 @@ class DataUpdater {
             
             chartElement.chart = new Chart(chartElement, chartConfig);
             console.log(`Initialized chart: ${chartId}`);
+
+            // Auto-setup tooltips for rate charts after initialization
+            const isRateChart = ['2yr', '10yr', '30yr', '5yr', 'sofr', 'fedfunds', 'tbill', 'highyield', 'spread', 'mortgage', 'prime'].some(rate => chartId.includes(rate));
+            if (isRateChart) {
+                setTimeout(() => {
+                    this.setupChartTooltips(chartElement.chart, chartId);
+                    console.log(`✅ Auto-setup tooltips for newly created ${chartId}`);
+                }, 200);
+            }
         }
 
         // Limit to last 13 data points for economic indicators
         let displayData = data;
         let displayLabels = labels;
-        
-        if (chartId.includes('unemployment') || chartId.includes('corecpi') || chartId.includes('coreppi') || 
-            chartId.includes('corepce') || chartId.includes('jobless') || chartId.includes('retail') ||
+        let displayOriginalDates = originalDates;
+
+        if (chartId.includes('unemployment') || chartId.includes('corecpi') || chartId.includes('coreppi') ||
+            chartId.includes('corepce') || chartId.includes('gdp') || chartId.includes('retail') ||
             chartId.includes('newhomes') || chartId.includes('existinghomes') || chartId.includes('durablegoods') ||
             chartId.includes('sentiment') || chartId.includes('trade')) {
             displayData = data.slice(-13);
             displayLabels = labels.slice(-13);
+            if (originalDates) {
+                displayOriginalDates = originalDates.slice(-13);
+            }
         }
 
         // Update the chart data
         chartElement.chart.data.labels = displayLabels;
         chartElement.chart.data.datasets[0].data = displayData;
-        
+
+        // Store original dates for tooltips if provided
+        if (displayOriginalDates) {
+            chartElement.chart.data.originalDates = displayOriginalDates;
+        }
+
+        // Enhanced debugging for GDP
+        if (chartId === 'gdp-chart') {
+            console.log('📊 GDP: About to update chart with:', {
+                displayDataLength: displayData.length,
+                displayLabelsLength: displayLabels.length,
+                displayData: displayData,
+                displayLabels: displayLabels
+            });
+        }
+
         chartElement.chart.update();
+
+        // Auto-setup tooltips for rate charts after data update
+        const isRateChart = ['2yr', '10yr', '30yr', '5yr', 'sofr', 'fedfunds', 'tbill', 'highyield', 'spread', 'mortgage', 'prime'].some(rate => chartId.includes(rate));
+        if (isRateChart) {
+            setTimeout(() => {
+                this.setupChartTooltips(chartElement.chart, chartId);
+                console.log(`✅ Auto-setup tooltips after data update for ${chartId}`);
+            }, 100);
+        }
+
+        if (chartId === 'gdp-chart') {
+            console.log('📊 GDP: Chart update completed successfully!');
+        }
+
         console.log(`Updated chart: ${chartId} with ${displayData.length} data points`);
     }
 
@@ -767,6 +968,12 @@ class DataUpdater {
             return;
         }
 
+        const chart = chartElement.chart;
+
+        // Force tooltip configuration for rate charts (always override)
+        console.log(`🔧 Setting up tooltips for ${chartId}`);
+        this.setupChartTooltips(chart, chartId);
+
         // Check if Yahoo Finance service is available
         if (!window.yahooFinanceService) {
             console.warn('Yahoo Finance service not available');
@@ -814,7 +1021,12 @@ class DataUpdater {
                     // Calculate and populate period-returns for Yahoo Finance rate data
                     if (window.apiService && typeof window.apiService.calculateExtendedReturnsForRates === 'function') {
                         const extendedReturns = window.apiService.calculateExtendedReturnsForRates(historicalData.prices, historicalData.dates);
-                        this.updateRatePeriodReturns(chartId, extendedReturns);
+                        // Find the card element for this chart
+                        const chartElement = document.getElementById(chartId);
+                        const card = chartElement?.closest('.card');
+                        if (card) {
+                            this.updateRatePeriodReturns(card, extendedReturns);
+                        }
                     }
                 }
             } else {
@@ -835,6 +1047,10 @@ class DataUpdater {
         }
 
         const chart = chartElement.chart;
+
+        // Force tooltip configuration for rate charts (always override)
+        console.log(`🔧 Setting up tooltips for ${chartId}`);
+        this.setupChartTooltips(chart, chartId);
         
         // If we have FRED historical data, process it to fit our 365-day format
         if (historicalData && historicalData.length > 0 && historicalLabels && historicalLabels.length > 0) {
@@ -861,11 +1077,21 @@ class DataUpdater {
                 // Update the chart
                 chart.update('none');
                 console.log(`✅ Updated ${chartId} with FRED data (${processedData.data.length} points)`);
-                
+
+                // Setup tooltips for FRED rate charts
+                setTimeout(() => {
+                    this.setupChartTooltips(chart, chartId);
+                    console.log(`✅ Auto-setup tooltips for FRED ${chartId}`);
+                }, 100);
+
                 // Calculate and populate period-returns for FRED rate data
                 if (window.apiService && typeof window.apiService.calculateExtendedReturnsForRates === 'function') {
                     const extendedReturns = window.apiService.calculateExtendedReturnsForRates(historicalData, historicalLabels);
-                    this.updateRatePeriodReturns(chartId, extendedReturns);
+                    // Find the card element for this chart
+                    const cardElement = chartElement.closest('.card');
+                    if (cardElement) {
+                        this.updateRatePeriodReturns(cardElement, extendedReturns);
+                    }
                 }
             }
         } else {
@@ -873,49 +1099,56 @@ class DataUpdater {
         }
     }
 
-    // Update period-returns section for rate cards
-    updateRatePeriodReturns(chartId, extendedReturns) {
-        if (!extendedReturns || Object.keys(extendedReturns).length === 0) {
-            console.log(`No extended returns data for ${chartId}`);
+    // Update H8-specific period changes (QTD and YoY Quarter)
+    updateH8PeriodChanges(card, h8Changes) {
+        if (!card || !h8Changes) {
             return;
         }
 
-        // Find the rate card by chart ID
-        const chartElement = document.getElementById(chartId);
-        if (!chartElement) return;
-
-        const card = chartElement.closest('.card');
-        if (!card) return;
-
-        const periodReturns = card.querySelector('.period-returns');
-        if (!periodReturns) {
-            console.log(`No period-returns container found for ${chartId}`);
+        // Find the existing banking-period-changes container (H8 specific)
+        const periodContainer = card.querySelector('.banking-period-changes');
+        if (!periodContainer) {
             return;
         }
 
-        // Update each return item
-        const returnItems = periodReturns.querySelectorAll('.return-item');
-        returnItems.forEach(item => {
-            const label = item.querySelector('.return-label')?.textContent?.replace(':', '');
-            const valueElement = item.querySelector('.return-value');
-            
-            if (label && valueElement && extendedReturns[label] !== undefined) {
-                const value = extendedReturns[label];
-                const sign = value >= 0 ? '+' : '';
-                valueElement.textContent = `${sign}${value.toFixed(0)}bps`;
-                
-                // Add color coding
-                valueElement.className = 'return-value';
-                if (value > 0) {
-                    valueElement.classList.add('positive'); // Positive change = green
-                } else if (value < 0) {
-                    valueElement.classList.add('negative'); // Negative change = red
+        // Update QTD if available
+        if (h8Changes.QTD !== undefined) {
+            const qtdItems = periodContainer.querySelectorAll('.period-item');
+            for (const item of qtdItems) {
+                const label = item.querySelector('.period-label');
+                if (label && label.textContent.trim() === 'QTD:') {
+                    const valueElement = item.querySelector('.period-value');
+                    if (valueElement) {
+                        const qtdValue = h8Changes.QTD;
+                        const formattedValue = `${qtdValue >= 0 ? '+' : ''}${qtdValue.toFixed(2)}%`;
+                        valueElement.textContent = formattedValue;
+                        valueElement.className = `period-value ${qtdValue >= 0 ? 'positive' : 'negative'}`;
+                    }
+                    break;
                 }
             }
-        });
+        }
 
-        console.log(`✅ Updated period-returns for ${chartId}:`, extendedReturns);
+        // Update YoY Quarter if available
+        if (h8Changes.YoYQtr !== undefined) {
+            const yoyItems = periodContainer.querySelectorAll('.period-item');
+            for (const item of yoyItems) {
+                const label = item.querySelector('.period-label');
+                if (label && label.textContent.trim() === 'YoY Qtr:') {
+                    const valueElement = item.querySelector('.period-value');
+                    if (valueElement) {
+                        const yoyValue = h8Changes.YoYQtr;
+                        const formattedValue = `${yoyValue >= 0 ? '+' : ''}${yoyValue.toFixed(2)}%`;
+                        valueElement.textContent = formattedValue;
+                        valueElement.className = `period-value ${yoyValue >= 0 ? 'positive' : 'negative'}`;
+                    }
+                    break;
+                }
+            }
+        }
     }
+
+    // Update period-returns section for rate cards
 
     // Process FRED data to fit our 365-day format with monthly labels
     processFredDataFor365Days(historicalData, historicalLabels, chartId) {
@@ -1247,6 +1480,227 @@ class DataUpdater {
         return null;
     }
 
+    // Setup chart tooltips for rate charts
+    setupChartTooltips(chart, chartId) {
+        if (!chart.options.plugins) {
+            chart.options.plugins = {};
+        }
+
+        chart.options.plugins.tooltip = {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+                title: function(context) {
+                    // Use original dates for tooltip if available
+                    if (context[0].chart.data.originalDates && context[0].chart.data.originalDates[context[0].dataIndex]) {
+                        const date = new Date(context[0].chart.data.originalDates[context[0].dataIndex]);
+                        return (date.getMonth() + 1) + '/' + date.getDate() + '/' + date.getFullYear();
+                    }
+                    return context[0].label;
+                },
+                label: function(context) {
+                    // Check if this is a rate chart and format appropriately
+                    const chartId = context.chart.canvas.id;
+                    const value = context.parsed.y;
+
+                    if (chartId && (chartId.includes('yr-chart') || chartId.includes('fedfunds') ||
+                        chartId.includes('sofr') || chartId.includes('tbill') ||
+                        chartId.includes('mortgage') || chartId.includes('highyield') ||
+                        chartId.includes('prime'))) {
+                        // For rate charts - value might be in basis points or percentage
+                        // If value is > 100, it's likely basis points, convert to percentage
+                        if (Math.abs(value) > 100) {
+                            return (value / 100).toFixed(2) + '%';
+                        } else {
+                            return value.toFixed(2) + '%';
+                        }
+                    } else if (chartId && chartId.includes('spread')) {
+                        // Format spread in basis points with 2 decimal places
+                        return value.toFixed(2) + ' bps';
+                    } else {
+                        // Default formatting with 2 decimal places
+                        return value.toFixed(2);
+                    }
+                }
+            }
+        };
+
+        // Update the chart to apply new tooltip configuration
+        chart.update('none');
+    }
+
+    // Update period returns for rate cards
+    updateRatePeriodReturns(card, returns) {
+        // Validate card is a DOM element
+        if (!card || typeof card.querySelector !== 'function') {
+            console.error('updateRatePeriodReturns: Invalid card element', card);
+            return;
+        }
+
+        const periodReturnsDiv = card.querySelector('.period-returns');
+        if (!periodReturnsDiv) {
+            return; // No period returns section in this card
+        }
+
+        // Map our return periods to the HTML elements
+        const periodMap = {
+            '1D': '1D',
+            '1W': '1W',
+            '1M': '1M',
+            'YTD': 'YTD',
+            '1Y': '1Y',
+            '3Y': '3Y',
+            '5Y': '5Y'
+        };
+
+        // Update each period return value
+        for (const [dataKey, labelKey] of Object.entries(periodMap)) {
+            let valueElement = null;
+
+            // Find by label text
+            const labels = periodReturnsDiv.querySelectorAll('.return-label');
+            for (const label of labels) {
+                if (label.textContent.trim() === `${labelKey}:`) {
+                    valueElement = label.parentElement.querySelector('.return-value');
+                    break;
+                }
+            }
+
+            if (valueElement && returns[dataKey] !== undefined) {
+                const value = returns[dataKey];
+
+                // Better formatting - use 1 decimal for small values, 0 for larger ones
+                let formattedValue;
+                if (Math.abs(value) < 1) {
+                    // For small values, show 1 decimal place
+                    formattedValue = value >= 0 ? `+${value.toFixed(1)}` : value.toFixed(1);
+                } else {
+                    // For larger values, show whole numbers
+                    formattedValue = value >= 0 ? `+${value.toFixed(0)}` : value.toFixed(0);
+                }
+
+                // Force DOM refresh by clearing and setting
+                valueElement.textContent = '';
+                valueElement.className = 'return-value';
+
+                // Set new values with slight delay to force redraw
+                setTimeout(() => {
+                    valueElement.textContent = `${formattedValue} bps`;
+                    valueElement.className = 'return-value ' + (value >= 0 ? 'positive' : 'negative');
+                }, 1);
+            }
+        }
+    }
+
+    // DEBUG: Add console debugging functions
+    setupDebuggingTools() {
+        window.debugRateCards = () => {
+            console.log('🔧 DEBUG: Inspecting rate cards...');
+
+            const rateCards = document.querySelectorAll('.card');
+            rateCards.forEach((card, index) => {
+                const chartElement = card.querySelector('canvas');
+                const periodReturns = card.querySelector('.period-returns');
+
+                if (chartElement && periodReturns) {
+                    const chartId = chartElement.id;
+                    if (chartId && (chartId.includes('yr') || chartId.includes('bill') || chartId.includes('sofr') || chartId.includes('fedfunds') || chartId.includes('highyield'))) {
+                        console.log(`🔍 Rate Card ${index}: ${chartId}`, {
+                            cardElement: card,
+                            chartId: chartId,
+                            hasPeriodReturns: !!periodReturns,
+                            periodReturnsHTML: periodReturns.innerHTML,
+                            returnItems: Array.from(periodReturns.querySelectorAll('.return-item')).map(item => ({
+                                label: item.querySelector('.return-label')?.textContent,
+                                value: item.querySelector('.return-value')?.textContent,
+                                className: item.querySelector('.return-value')?.className
+                            }))
+                        });
+                    }
+                }
+            });
+        };
+
+        window.updateSingleRateCard = (cardId = '2yr-chart') => {
+            console.log(`🔧 DEBUG: Force updating ${cardId}...`);
+            const chartElement = document.getElementById(cardId);
+            if (!chartElement) {
+                console.error('Chart element not found:', cardId);
+                return;
+            }
+
+            const card = chartElement.closest('.card');
+            if (!card) {
+                console.error('Card element not found for:', cardId);
+                return;
+            }
+
+            // Create test data
+            const testData = {
+                '1D': 5,
+                '1W': -10,
+                '1M': 25,
+                'YTD': -15,
+                '1Y': 50
+            };
+
+            console.log('🔧 Forcing update with test data:', testData);
+            window.dataUpdater.updateRatePeriodReturns(card, testData);
+        };
+
+        window.inspectPeriodElements = (cardId = '2yr-chart') => {
+            console.log(`🔧 DEBUG: Inspecting period elements for ${cardId}...`);
+            const chartElement = document.getElementById(cardId);
+            if (!chartElement) {
+                console.error('Chart element not found:', cardId);
+                return;
+            }
+
+            const card = chartElement.closest('.card');
+            const periodReturns = card.querySelector('.period-returns');
+
+            if (!periodReturns) {
+                console.error('No .period-returns found');
+                return;
+            }
+
+            const items = periodReturns.querySelectorAll('.return-item');
+            console.log(`Found ${items.length} return items:`);
+
+            items.forEach((item, i) => {
+                const label = item.querySelector('.return-label');
+                const value = item.querySelector('.return-value');
+                console.log(`Item ${i}:`, {
+                    element: item,
+                    label: label?.textContent,
+                    value: value?.textContent,
+                    valueClassName: value?.className,
+                    labelElement: label,
+                    valueElement: value
+                });
+            });
+        };
+
+        window.fixTooltips = (chartId = '2yr-chart') => {
+            console.log(`🔧 DEBUG: Manually fixing tooltips for ${chartId}...`);
+            const chartElement = document.getElementById(chartId);
+            if (!chartElement || !chartElement.chart) {
+                console.error('Chart not found:', chartId);
+                return;
+            }
+
+            console.log(`🔧 Forcing tooltip setup for ${chartId}`);
+            window.dataUpdater.setupChartTooltips(chartElement.chart, chartId);
+            console.log(`✅ Tooltips fixed for ${chartId} - try hovering now`);
+        };
+
+        console.log('🔧 DEBUG TOOLS LOADED:');
+        console.log('• debugRateCards() - Inspect all rate cards');
+        console.log('• updateSingleRateCard("2yr-chart") - Test update single card');
+        console.log('• inspectPeriodElements("2yr-chart") - Inspect DOM elements');
+        console.log('• fixTooltips("2yr-chart") - Manually fix tooltips for a chart');
+    }
+
     // Initialize auto-update
     startAutoUpdate() {
         // Initial update
@@ -1259,6 +1713,10 @@ class DataUpdater {
 
 // Create global instance
 const dataUpdater = new DataUpdater();
+window.dataUpdater = dataUpdater;
+
+// Setup debugging tools
+dataUpdater.setupDebuggingTools();
 
 // Start updates when page loads
 window.addEventListener('load', () => {

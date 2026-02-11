@@ -173,6 +173,16 @@ function initializeEconomicChart(chartId, dataKey, color) {
                     tooltip: {
                         mode: 'index',
                         intersect: false,
+                        callbacks: {
+                            title: function(context) {
+                                // If we have original dates stored, use them
+                                if (this.chart.data.originalDates && this.chart.data.originalDates[context[0].dataIndex]) {
+                                    const date = new Date(this.chart.data.originalDates[context[0].dataIndex]);
+                                    return (date.getMonth() + 1) + '/' + date.getDate() + '/' + date.getFullYear();
+                                }
+                                return context[0].label;
+                            }
+                        }
                     }
                 },
                 scales: {
@@ -357,8 +367,17 @@ function initializeBankingCharts() {
                             mode: 'index',
                             intersect: false,
                             callbacks: {
+                                title: function(context) {
+                                    // Use original dates for tooltip if available
+                                    if (context[0].chart.data.originalDates && context[0].chart.data.originalDates[context[0].dataIndex]) {
+                                        const date = new Date(context[0].chart.data.originalDates[context[0].dataIndex]);
+                                        return (date.getMonth() + 1) + '/' + date.getDate() + '/' + date.getFullYear();
+                                    }
+                                    return context[0].label;
+                                },
                                 label: function(context) {
-                                    return '$' + context.parsed.y.toFixed(1) + 'B';
+                                    // All H8 data is now stored in trillions for display
+                                    return '$' + context.parsed.y.toFixed(3) + 'Tn';
                                 }
                             }
                         }
@@ -430,26 +449,9 @@ function switchTab(tabName, tabElement) {
             // Initialize banking charts
             initializeBankingCharts();
 
-            // Update banking data if service is available and initialized
-            if (window.bankingService && !window.bankingService.initializeInProgress) {
-                console.log('🏦 Banking service available, triggering update...');
-                window.bankingService.updateBankingTab();
-            } else if (!window.bankingService) {
-                console.log('🏦 Banking service not available, will try to initialize...');
-                // Try to initialize banking service if not ready
-                setTimeout(() => {
-                    if (!window.bankingService && typeof BankingService !== 'undefined') {
-                        console.log('🏦 Creating new banking service instance...');
-                        window.bankingService = new BankingService();
-                        window.bankingService.init();
-                    } else if (window.bankingService) {
-                        console.log('🏦 Banking service now available, triggering update...');
-                        window.bankingService.updateBankingTab();
-                    }
-                }, 1000);
-            } else {
-                console.log('🏦 Banking service initialization in progress, will wait...');
-            }
+            // H8 data is now handled by apiService-v2 during initial load
+            // Banking tab only needs charts initialized, not data reload
+            console.log('🏦 Banking tab - charts initialized, data loaded by apiService-v2');
         }
     }, 100);
 }
