@@ -398,7 +398,9 @@ class APIService {
             { key: '1W', days: 7 },
             { key: '1M', days: 30 },
             { key: 'YTD', isYTD: true },
-            { key: '1Y', days: 365 }
+            { key: '1Y', days: 365 },
+            { key: '3Y', days: 365 * 3 },
+            { key: '5Y', days: 365 * 5 }
         ];
 
         for (const period of periods) {
@@ -851,8 +853,8 @@ class APIService {
 
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Fed Funds Rate (fetch 400 days to ensure 1Y calculation works)
-            const fedFundsData = await this.getFREDSeries(API_CONFIG.FRED.series.fedFunds, 400);
+            // Fed Funds Rate - fetch 5+ years of data for long-term returns
+            const fedFundsData = await this.getFREDSeries(API_CONFIG.FRED.series.fedFunds, 1900);
             if (fedFundsData && fedFundsData.values.length > 0) {
                 const current = fedFundsData.values[fedFundsData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(fedFundsData.values, fedFundsData.dates);
@@ -875,8 +877,8 @@ class APIService {
 
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // 3-Month T-Bill
-            const tbill3mData = await this.getFREDSeries(API_CONFIG.FRED.series.tbill3m, 400);
+            // 3-Month T-Bill - fetch 5+ years of data for long-term returns
+            const tbill3mData = await this.getFREDSeries(API_CONFIG.FRED.series.tbill3m, 1900);
             if (tbill3mData && tbill3mData.values.length > 0) {
                 const current = tbill3mData.values[tbill3mData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(tbill3mData.values, tbill3mData.dates);
@@ -898,8 +900,8 @@ class APIService {
 
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // 1M SOFR
-            const sofrData = await this.getFREDSeries(API_CONFIG.FRED.series.sofr1m, 400);
+            // 1M SOFR - fetch 5+ years of data for long-term returns
+            const sofrData = await this.getFREDSeries(API_CONFIG.FRED.series.sofr1m, 1900);
             if (sofrData && sofrData.values.length > 0) {
                 const current = sofrData.values[sofrData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(sofrData.values, sofrData.dates);
@@ -921,8 +923,8 @@ class APIService {
 
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Treasury 5yr
-            const treasury5yrData = await this.getFREDSeries(API_CONFIG.FRED.series.treasury5yr, 400);
+            // Treasury 5yr - fetch 5+ years of data for long-term returns
+            const treasury5yrData = await this.getFREDSeries(API_CONFIG.FRED.series.treasury5yr, 1900);
             if (treasury5yrData && treasury5yrData.values.length > 0) {
                 const current = treasury5yrData.values[treasury5yrData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(treasury5yrData.values, treasury5yrData.dates);
@@ -944,8 +946,8 @@ class APIService {
 
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Treasury 30yr
-            const treasury30yrData = await this.getFREDSeries(API_CONFIG.FRED.series.treasury30yr, 400);
+            // Treasury 30yr - fetch 5+ years of data for long-term returns
+            const treasury30yrData = await this.getFREDSeries(API_CONFIG.FRED.series.treasury30yr, 1900);
             if (treasury30yrData && treasury30yrData.values.length > 0) {
                 const current = treasury30yrData.values[treasury30yrData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(treasury30yrData.values, treasury30yrData.dates);
@@ -967,8 +969,8 @@ class APIService {
 
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // High Yield Index
-            const highYieldData = await this.getFREDSeries(API_CONFIG.FRED.series.highYield, 400);
+            // High Yield Index - fetch 5+ years of data for long-term returns
+            const highYieldData = await this.getFREDSeries(API_CONFIG.FRED.series.highYield, 1900);
             if (highYieldData && highYieldData.values.length > 0) {
                 const current = highYieldData.values[highYieldData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(highYieldData.values, highYieldData.dates);
@@ -990,8 +992,8 @@ class APIService {
 
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Treasury 2yr
-            const treasury2yrData = await this.getFREDSeries(API_CONFIG.FRED.series.treasury2yr, 400);
+            // Treasury 2yr - fetch 5+ years of data for long-term returns
+            const treasury2yrData = await this.getFREDSeries(API_CONFIG.FRED.series.treasury2yr, 1900);
             if (treasury2yrData && treasury2yrData.values.length > 0) {
                 const current = treasury2yrData.values[treasury2yrData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(treasury2yrData.values, treasury2yrData.dates);
@@ -1014,8 +1016,8 @@ class APIService {
 
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Treasury 10yr
-            const treasury10yrData = await this.getFREDSeries(API_CONFIG.FRED.series.treasury10yr, 400);
+            // Treasury 10yr - fetch 5+ years of data for long-term returns
+            const treasury10yrData = await this.getFREDSeries(API_CONFIG.FRED.series.treasury10yr, 1900);
             if (treasury10yrData && treasury10yrData.values.length > 0) {
                 const current = treasury10yrData.values[treasury10yrData.values.length - 1];
                 const extendedReturns = this.calculateExtendedReturnsForRates(treasury10yrData.values, treasury10yrData.dates);

@@ -269,9 +269,16 @@ class CalendarService {
                         }
                         releaseDate.setHours(8, 30, 0, 0);
                     } else {
+                        // For CPI, PPI, and other lagged indicators, the release is for previous month's data
+                        // e.g., February CPI (released ~March 12) reports January data
+                        if (seriesId === 'coreCPI' || seriesId === 'corePPI') {
+                            // These report previous month's data, so add 1 month to release date
+                            releaseDate.setMonth(releaseDate.getMonth() + 1);
+                        }
+
                         releaseDate.setDate(schedule.day);
                         releaseDate.setHours(8, 30, 0, 0);
-                        
+
                         if (seriesId === 'consumerSentiment') {
                             releaseDate.setHours(10, 0, 0, 0);
                         }
