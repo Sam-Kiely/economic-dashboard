@@ -484,17 +484,23 @@ class DataUpdater {
         }
 
         // Update next release date (skip for rate cards)
-        
+
         const nextReleaseElement = card.querySelector('.next-release');
         if (data.seriesId && !isRateCard) {
-            const nextRelease = this.calculateNextRelease(data.seriesId, data.observationDate);
+            // Prefer real FRED release dates from calendar service
+            let nextRelease = null;
+            if (window.calendarService && window.calendarService.fredReleaseCache) {
+                nextRelease = window.calendarService.getNextReleaseDate(data.seriesId);
+            }
+            // Fall back to estimated schedule
+            if (!nextRelease) {
+                nextRelease = this.calculateNextRelease(data.seriesId, data.observationDate);
+            }
             if (nextRelease) {
                 if (!nextReleaseElement) {
-                    // Create next release element if it doesn't exist
                     const newReleaseElement = document.createElement('div');
                     newReleaseElement.className = 'next-release';
                     newReleaseElement.textContent = this.formatNextRelease(nextRelease);
-                    // Insert after card-description if it exists
                     const descElement = card.querySelector('.card-description');
                     if (descElement) {
                         descElement.insertAdjacentElement('afterend', newReleaseElement);

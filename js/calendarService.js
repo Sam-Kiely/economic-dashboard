@@ -84,6 +84,7 @@ class CalendarService {
     }
 
     // Fetch release dates from FRED API
+    // Makes two calls: past week + future, to avoid daily releases consuming the 1000-entry limit
     async fetchFREDReleaseDates() {
         const now = Date.now();
 
@@ -95,29 +96,57 @@ class CalendarService {
 
         try {
             const today = new Date();
-            // Start from 1 week ago (enough for "this week" past days)
-            // rather than 1 month ago which wastes the limit on daily releases
+            const formatDate = (d) => d.toISOString().split('T')[0];
+
+            // Two fetches: past week (for "this week" past days) and today-forward (for future dates)
+            // Each limited to 1000 (FRED max). Starting from today avoids wasting
+            // the limit on hundreds of daily releases from past days.
             const weekAgo = new Date(today);
             weekAgo.setDate(weekAgo.getDate() - 7);
 
-            const formatDate = (d) => d.toISOString().split('T')[0];
-
-            const url = `/api/fred-releases-dates?` +
+            const pastUrl = `/api/fred-releases-dates?` +
                 `realtime_start=${formatDate(weekAgo)}` +
+                `&realtime_end=${formatDate(today)}` +
+                `&sort_order=asc` +
+                `&include_release_dates_with_no_data=true` +
+                `&limit=1000`;
+
+            const futureUrl = `/api/fred-releases-dates?` +
+                `realtime_start=${formatDate(today)}` +
                 `&realtime_end=9999-12-31` +
                 `&sort_order=asc` +
                 `&include_release_dates_with_no_data=true` +
-                `&limit=2000`;
+                `&limit=1000`;
 
-            const response = await fetch(url);
+            const [pastResponse, futureResponse] = await Promise.all([
+                fetch(pastUrl),
+                fetch(futureUrl)
+            ]);
 
-            if (!response.ok) {
-                throw new Error(`FRED API error: ${response.status}`);
+            if (!pastResponse.ok || !futureResponse.ok) {
+                throw new Error(`FRED API error: past=${pastResponse.status}, future=${futureResponse.status}`);
             }
 
-            const data = await response.json();
+            const [pastData, futureData] = await Promise.all([
+                pastResponse.json(),
+                futureResponse.json()
+            ]);
 
-            this.fredReleaseCache = data.release_dates || [];
+            const pastDates = pastData.release_dates || [];
+            const futureDates = futureData.release_dates || [];
+
+            // Merge and deduplicate (by release_id + date)
+            const seen = new Set();
+            const merged = [];
+            for (const entry of [...pastDates, ...futureDates]) {
+                const key = `${entry.release_id}_${entry.date}`;
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    merged.push(entry);
+                }
+            }
+
+            this.fredReleaseCache = merged;
             this.cacheTimestamp = now;
 
             console.log(`Cached ${this.fredReleaseCache.length} FRED release dates`);
@@ -128,6 +157,38 @@ class CalendarService {
             this.fredReleaseCache = null;
             throw error;
         }
+    }
+
+    // Get the next upcoming release date for a specific series
+    // Returns a Date or null. Uses cached FRED release data.
+    getNextReleaseDate(seriesId) {
+        if (!this.fredReleaseCache) return null;
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        // Find the release ID(s) that map to this seriesId
+        const releaseIds = [];
+        for (const [id, mapping] of Object.entries(this.RELEASE_ID_TO_SERIES)) {
+            if (mapping.seriesId === seriesId) {
+                releaseIds.push(parseInt(id));
+            }
+        }
+        if (releaseIds.length === 0) return null;
+
+        // Find the earliest future release date for this series
+        let earliest = null;
+        for (const release of this.fredReleaseCache) {
+            if (!releaseIds.includes(release.release_id)) continue;
+            const releaseDate = new Date(release.date + 'T00:00:00');
+            if (releaseDate >= today) {
+                if (!earliest || releaseDate < earliest) {
+                    earliest = releaseDate;
+                }
+            }
+        }
+
+        return earliest;
     }
 
     // Calculate upcoming releases using real FRED data
