@@ -23,7 +23,6 @@ class CalendarService {
         55:  { seriesId: 'newHomeSales',     name: 'New Home Sales',           impact: 'low',    time: '10:00 AM ET' },
         253: { seriesId: 'existingHomeSales',name: 'Existing Home Sales',      impact: 'low',    time: '10:00 AM ET' },
         29:  { seriesId: 'consumerSentiment',name: 'Consumer Sentiment',       impact: 'medium', time: '10:00 AM ET' },
-        22:  { seriesId: 'h8Data',           name: 'H.8 Banking Data',         impact: 'medium', time: '4:15 PM ET' },
         398: { seriesId: 'fomc',             name: 'FOMC Rate Decision',       impact: 'high',   time: '2:00 PM ET' }
     };
 
@@ -96,17 +95,19 @@ class CalendarService {
 
         try {
             const today = new Date();
-            const monthAgo = new Date(today);
-            monthAgo.setMonth(monthAgo.getMonth() - 1);
+            // Start from 1 week ago (enough for "this week" past days)
+            // rather than 1 month ago which wastes the limit on daily releases
+            const weekAgo = new Date(today);
+            weekAgo.setDate(weekAgo.getDate() - 7);
 
             const formatDate = (d) => d.toISOString().split('T')[0];
 
             const url = `/api/fred-releases-dates?` +
-                `realtime_start=${formatDate(monthAgo)}` +
+                `realtime_start=${formatDate(weekAgo)}` +
                 `&realtime_end=9999-12-31` +
                 `&sort_order=asc` +
                 `&include_release_dates_with_no_data=true` +
-                `&limit=1000`;
+                `&limit=2000`;
 
             const response = await fetch(url);
 
