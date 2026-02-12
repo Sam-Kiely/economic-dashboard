@@ -1,16 +1,35 @@
-// Economic Calendar Service - 30-day forward calendar with confirmed dates only
+// Economic Calendar Service - Real FRED Release Dates API
 class CalendarService {
     constructor() {
         this.selectedPeriod = 'this-week';
         this.container = null;
         this.initialized = false;
-        this.economicData = {};
-        this.calendarEvents = [];
+        this.fredReleaseCache = null;
+        this.cacheTimestamp = 0;
+        this.cacheTimeout = 3600000; // 1 hour
     }
+
+    // FRED Release ID to Series Mapping
+    RELEASE_ID_TO_SERIES = {
+        10:  { seriesId: 'coreCPI',           name: 'Consumer Price Index',     impact: 'high',   time: '8:30 AM ET' },
+        31:  { seriesId: 'corePPI',           name: 'Producer Price Index',     impact: 'high',   time: '8:30 AM ET' },
+        54:  { seriesId: 'corePCE',           name: 'PCE Price Index',          impact: 'high',   time: '8:30 AM ET' },
+        53:  { seriesId: 'gdp',              name: 'GDP (Quarterly)',          impact: 'high',   time: '8:30 AM ET' },
+        127: { seriesId: 'tradeDeficit',     name: 'Trade Balance',            impact: 'low',    time: '8:30 AM ET' },
+        50:  { seriesId: 'unemployment',     name: 'Employment Situation',     impact: 'high',   time: '8:30 AM ET' },
+        176: { seriesId: 'joblessClaims',    name: 'Initial Jobless Claims',   impact: 'medium', time: '8:30 AM ET' },
+        9:   { seriesId: 'retailSales',      name: 'Retail Sales',             impact: 'medium', time: '8:30 AM ET' },
+        94:  { seriesId: 'durableGoods',     name: 'Durable Goods Orders',     impact: 'medium', time: '8:30 AM ET' },
+        55:  { seriesId: 'newHomeSales',     name: 'New Home Sales',           impact: 'low',    time: '10:00 AM ET' },
+        253: { seriesId: 'existingHomeSales',name: 'Existing Home Sales',      impact: 'low',    time: '10:00 AM ET' },
+        29:  { seriesId: 'consumerSentiment',name: 'Consumer Sentiment',       impact: 'medium', time: '10:00 AM ET' },
+        22:  { seriesId: 'h8Data',           name: 'H.8 Banking Data',         impact: 'medium', time: '4:15 PM ET' },
+        398: { seriesId: 'fomc',             name: 'FOMC Rate Decision',       impact: 'high',   time: '2:00 PM ET' }
+    };
 
     // Initialize the calendar
     async init(containerId) {
-        console.log('Initializing calendar with container:', containerId);
+        console.log('Initializing FRED calendar with container:', containerId);
 
         this.container = document.getElementById(containerId);
         if (!this.container) {
@@ -20,146 +39,275 @@ class CalendarService {
 
         this.initialized = true;
         this.setupPeriodSelector();
-        await this.fetchCalendarData();
-        this.render();
+
+        // Wait for charts to load, then render
+        const maxWait = 30000; // 30 seconds max
+        const checkInterval = 500; // Check every 500ms
+        let elapsed = 0;
+
+        const waitForCharts = async () => {
+            while (elapsed < maxWait) {
+                const chartExists = document.querySelector('.chart-container canvas');
+                if (chartExists) {
+                    console.log('✅ Charts detected, rendering calendar');
+                    await this.renderCalendar();
+                    return;
+                }
+                await new Promise(resolve => setTimeout(resolve, checkInterval));
+                elapsed += checkInterval;
+            }
+            console.warn('⚠️ Charts not detected after 30s, rendering calendar anyway');
+            await this.renderCalendar();
+        };
+
+        waitForCharts();
+
+        // Set up refresh interval
+        setInterval(() => this.refresh(), 300000); // Refresh every 5 minutes
+
         return true;
     }
 
-    // Fetch 30-day economic calendar from API
-    async fetchCalendarData() {
-        console.log('Fetching 30-day economic calendar...');
+    // Fetch release dates from FRED API
+    async fetchFREDReleaseDates() {
+        const now = Date.now();
+
+        // Return cached data if still valid
+        if (this.fredReleaseCache && (now - this.cacheTimestamp) < this.cacheTimeout) {
+            console.log('Using cached FRED release data');
+            return this.fredReleaseCache;
+        }
+
+        console.log('Fetching FRED release dates from API...');
 
         try {
-            // Fetch from our economic calendar API
-            const response = await fetch('/api/economic-calendar');
-            if (response.ok) {
-                const data = await response.json();
-                this.calendarEvents = data.events || [];
-            } else {
-                console.error('Failed to fetch calendar data:', response.status);
-                // Fallback to manual calendar
-                this.calendarEvents = this.generateFallbackCalendar();
+            const today = new Date();
+            const monthAgo = new Date(today);
+            monthAgo.setMonth(monthAgo.getMonth() - 1);
+
+            const formatDate = (d) => d.toISOString().split('T')[0];
+
+            const url = `https://api.stlouisfed.org/fred/releases/dates?` +
+                `api_key=${API_CONFIG.FRED.apiKey}` +
+                `&file_type=json` +
+                `&include_release_dates_with_no_data=true` +
+                `&realtime_start=${formatDate(monthAgo)}` +
+                `&realtime_end=9999-12-31` +
+                `&sort_order=asc` +
+                `&limit=1000`;
+
+            console.log('FRED releases URL:', url);
+
+            // FRED supports CORS natively - no proxy needed
+            const response = await fetch(url);
+
+            if (!response.ok) {
+                throw new Error(`FRED API error: ${response.status}`);
             }
+
+            const data = await response.json();
+            console.log('FRED releases response:', data);
+
+            this.fredReleaseCache = data.release_dates || [];
+            this.cacheTimestamp = now;
+
+            console.log(`✅ Cached ${this.fredReleaseCache.length} FRED release dates`);
+            return this.fredReleaseCache;
+
         } catch (error) {
-            console.error('Error fetching calendar:', error);
-            // Fallback to manual calendar
-            this.calendarEvents = this.generateFallbackCalendar();
-        }
+            console.error('Error fetching FRED release dates:', error);
 
-        // Enhance with dashboard data
-        await this.enhanceWithDashboardData();
-        console.log('Calendar events loaded:', this.calendarEvents);
+            // Don't fall back to estimates - show error instead
+            this.fredReleaseCache = null;
+            throw error;
+        }
     }
 
-    // Generate fallback calendar for next 30 days
-    generateFallbackCalendar() {
-        const events = [];
-        const today = new Date();
+    // Calculate upcoming releases using real FRED data
+    async calculateUpcomingReleases() {
+        try {
+            const releaseDates = await this.fetchFREDReleaseDates();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
 
-        // Add confirmed FOMC dates for 2026
-        const fomcDates = [
-            '2026-01-28', '2026-03-17', '2026-05-05', '2026-06-16',
-            '2026-07-28', '2026-09-15', '2026-11-03', '2026-12-15'
-        ];
+            // Calculate period boundaries
+            const { periodStart, periodEnd } = this.getPeriodBoundaries(today);
 
-        fomcDates.forEach(dateStr => {
-            const date = new Date(dateStr + 'T14:00:00');
-            if (date > today && date <= new Date(today.getTime() + 30 * 24 * 60 * 60 * 1000)) {
-                events.push({
-                    date: dateStr,
-                    name: 'FOMC Rate Decision',
-                    impact: 'high',
-                    source: 'Federal Reserve',
-                    confirmed: true,
-                    time: '14:00'
-                });
-            }
-        });
+            const events = [];
 
-        // Add weekly jobless claims (confirmed pattern)
-        for (let i = 1; i <= 30; i++) {
-            const checkDate = new Date(today);
-            checkDate.setDate(today.getDate() + i);
+            releaseDates.forEach(release => {
+                const mapping = this.RELEASE_ID_TO_SERIES[release.release_id];
+                if (!mapping) return; // Skip releases we don't track
 
-            if (checkDate.getDay() === 4) { // Thursday
-                events.push({
-                    date: checkDate.toISOString().split('T')[0],
-                    name: 'Initial Jobless Claims',
-                    impact: 'medium',
-                    source: 'DOL',
-                    confirmed: true,
-                    time: '08:30'
-                });
-            }
+                const releaseDate = new Date(release.date + 'T00:00:00');
+
+                if (releaseDate >= periodStart && releaseDate <= periodEnd) {
+                    events.push({
+                        date: releaseDate,
+                        name: mapping.name,
+                        impact: mapping.impact,
+                        seriesId: mapping.seriesId,
+                        time: mapping.time,
+                        isPast: releaseDate < today,
+                        releaseName: release.release_name, // Keep FRED's official name
+                        releaseId: release.release_id
+                    });
+                }
+            });
+
+            events.sort((a, b) => a.date - b.date);
+            console.log(`📅 Found ${events.length} releases for ${this.selectedPeriod}:`, events);
+            return events;
+
+        } catch (error) {
+            console.error('Error calculating upcoming releases:', error);
+            return [];
         }
-
-        return events;
     }
 
-    // Enhance calendar events with dashboard data
-    async enhanceWithDashboardData() {
-        // Map of indicator names to dashboard selectors
-        const indicatorMap = {
-            'Consumer Price Index': { selector: '#cpi-chart', name: 'CPI' },
-            'Producer Price Index': { selector: '#ppi-chart', name: 'PPI' },
-            'Employment Situation': { selector: '#unemployment-chart', name: 'Jobs Report' },
-            'Retail Sales': { selector: '#retail-chart', name: 'Retail Sales' },
-            'Initial Jobless Claims': { selector: '#jobless-chart', name: 'Jobless Claims' },
-            'GDP': { selector: '#gdp-chart', name: 'GDP' },
-            'PCE Price Index': { selector: '#pce-chart', name: 'PCE' },
-            'Durable Goods': { selector: '#durablegoods-chart', name: 'Durable Goods' },
-            'New Home Sales': { selector: '#newhomes-chart', name: 'New Home Sales' },
-            'Existing Home Sales': { selector: '#existinghomes-chart', name: 'Existing Home Sales' },
-            'Consumer Sentiment': { selector: '#sentiment-chart', name: 'Consumer Sentiment' }
+    // Get period boundaries for filtering
+    getPeriodBoundaries(today) {
+        const currentDay = today.getDay(); // 0 = Sunday
+        let periodStart = new Date(today);
+        let periodEnd = new Date(today);
+
+        switch(this.selectedPeriod) {
+            case 'today':
+                periodStart.setHours(0, 0, 0, 0);
+                periodEnd.setHours(23, 59, 59, 999);
+                break;
+
+            case 'this-week':
+                // Start from Sunday of current week
+                const daysToSubtract = currentDay;
+                periodStart.setDate(today.getDate() - daysToSubtract);
+                periodStart.setHours(0, 0, 0, 0);
+                // End on Saturday
+                periodEnd = new Date(periodStart);
+                periodEnd.setDate(periodStart.getDate() + 6);
+                periodEnd.setHours(23, 59, 59, 999);
+                break;
+
+            case 'next-week':
+                // Start from next Sunday
+                const daysToNextSunday = 7 - currentDay;
+                periodStart.setDate(today.getDate() + daysToNextSunday);
+                periodStart.setHours(0, 0, 0, 0);
+                // End on next Saturday
+                periodEnd = new Date(periodStart);
+                periodEnd.setDate(periodStart.getDate() + 6);
+                periodEnd.setHours(23, 59, 59, 999);
+                break;
+
+            case 'month-ahead':
+                periodStart = new Date(today);
+                periodStart.setHours(0, 0, 0, 0);
+                periodEnd = new Date(today);
+                periodEnd.setDate(today.getDate() + 28);
+                periodEnd.setHours(23, 59, 59, 999);
+                break;
+        }
+
+        return { periodStart, periodEnd };
+    }
+
+    // Load current data from dashboard charts
+    loadCurrentData() {
+        const data = {};
+
+        const seriesMap = {
+            'coreCPI': '#cpi-chart',
+            'corePPI': '#ppi-chart',
+            'corePCE': '#pce-chart',
+            'gdp': '#gdp-chart',
+            'tradeDeficit': '#tradedeficit-chart',
+            'unemployment': '#unemployment-chart',
+            'joblessClaims': '#jobless-chart',
+            'retailSales': '#retail-chart',
+            'durableGoods': '#durablegoods-chart',
+            'newHomeSales': '#newhomes-chart',
+            'existingHomeSales': '#existinghomes-chart',
+            'consumerSentiment': '#sentiment-chart'
         };
 
-        // Enhance each event with dashboard data
-        this.calendarEvents.forEach(event => {
-            const mapping = indicatorMap[event.name];
-            if (mapping) {
-                const card = document.querySelector(mapping.selector);
-                if (card) {
-                    // Get current value
-                    const currentElement = card.querySelector('.metric-value');
-                    if (currentElement) {
-                        event.current = currentElement.textContent.trim();
-                    }
+        for (const [seriesId, selector] of Object.entries(seriesMap)) {
+            const card = document.querySelector(selector);
+            if (card) {
+                // Get current value
+                const currentElement = card.querySelector('.metric-value');
+                const current = currentElement ? currentElement.textContent.trim() : null;
 
-                    // Get previous value from chart data
-                    const chartCanvas = card.querySelector('canvas');
-                    if (chartCanvas && window.Chart && window.Chart.getChart) {
-                        const chart = window.Chart.getChart(chartCanvas);
-                        if (chart && chart.data && chart.data.datasets[0]) {
-                            const data = chart.data.datasets[0].data;
-                            if (data && data.length >= 2) {
-                                const prevValue = data[data.length - 2];
-                                event.previous = this.formatValue(prevValue, mapping.name);
-                            }
+                // Get previous value from chart data
+                let previous = null;
+                const chartCanvas = card.querySelector('canvas');
+                if (chartCanvas && window.Chart && window.Chart.getChart) {
+                    const chart = window.Chart.getChart(chartCanvas);
+                    if (chart && chart.data && chart.data.datasets[0]) {
+                        const chartData = chart.data.datasets[0].data;
+                        if (chartData && chartData.length >= 2) {
+                            const prevValue = chartData[chartData.length - 2];
+                            previous = this.formatValue(prevValue, seriesId);
                         }
                     }
+                }
 
-                    // Get observation date
-                    const dateElement = card.querySelector('.observation-date');
-                    if (dateElement) {
-                        event.lastUpdate = new Date(dateElement.textContent);
-                    }
+                if (current || previous) {
+                    data[seriesId] = { current, previous };
                 }
             }
-        });
+        }
+
+        console.log('Loaded dashboard data:', data);
+        return data;
     }
 
-    // Format value based on indicator type
-    formatValue(value, indicatorName) {
-        if (indicatorName === 'Jobs Report') {
-            return value.toFixed(1) + '%';
-        } else if (indicatorName.includes('Sales')) {
-            return indicatorName === 'New Home Sales' ? value + 'K' : value + 'M';
-        } else if (indicatorName === 'GDP' || indicatorName.includes('CPI') || indicatorName.includes('PCE') || indicatorName.includes('PPI')) {
-            return value.toFixed(1) + '%';
-        } else if (indicatorName === 'Jobless Claims') {
-            return value + 'K';
+    // Format value based on series type
+    formatValue(value, seriesId) {
+        if (typeof value !== 'number') return value;
+
+        switch(seriesId) {
+            case 'unemployment':
+            case 'coreCPI':
+            case 'corePPI':
+            case 'corePCE':
+            case 'gdp':
+            case 'retailSales':
+                return value.toFixed(1) + '%';
+            case 'joblessClaims':
+                return Math.round(value) + 'K';
+            case 'newHomeSales':
+                return Math.round(value) + 'K';
+            case 'existingHomeSales':
+                return value.toFixed(2) + 'M';
+            case 'consumerSentiment':
+                return value.toFixed(1);
+            case 'durableGoods':
+                return value.toFixed(1) + '%';
+            case 'tradeDeficit':
+                return '$' + Math.abs(value).toFixed(1) + 'B';
+            default:
+                return value.toString();
         }
-        return value.toString();
+    }
+
+    // Format data values for display
+    formatDataValues(seriesId, dashboardData) {
+        const data = dashboardData[seriesId];
+        if (!data) return '';
+
+        let html = '<div class="calendar-data-values">';
+
+        if (data.current) {
+            html += `<span class="data-label">Current:</span> <span class="data-value">${data.current}</span>`;
+        }
+
+        if (data.previous) {
+            if (data.current) html += '<span class="data-separator"> | </span>';
+            html += `<span class="data-label">Previous:</span> <span class="data-value">${data.previous}</span>`;
+        }
+
+        html += '</div>';
+        return html;
     }
 
     // Setup period selector
@@ -172,24 +320,24 @@ class CalendarService {
 
         const buttons = selector.querySelectorAll('.period-btn');
         buttons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', async (e) => {
                 buttons.forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 this.selectedPeriod = e.target.dataset.period;
                 console.log('Period changed to:', this.selectedPeriod);
-                this.render();
+                await this.renderCalendar();
             });
         });
     }
 
     // Refresh the calendar
     async refresh() {
-        await this.fetchCalendarData();
-        this.render();
+        console.log('Refreshing calendar...');
+        await this.renderCalendar();
     }
 
     // Render the calendar
-    render() {
+    async renderCalendar() {
         if (!this.container || !this.initialized) {
             console.log('Cannot render - container not initialized');
             return;
@@ -198,13 +346,17 @@ class CalendarService {
         console.log('Rendering calendar for period:', this.selectedPeriod);
 
         try {
-            const events = this.getEventsForPeriod();
+            // Show loading state
+            this.container.innerHTML = '<div class="calendar-loading">Loading release dates...</div>';
+
+            const events = await this.calculateUpcomingReleases();
+            const dashboardData = this.loadCurrentData();
 
             if (!events || events.length === 0) {
                 this.container.innerHTML = `
                     <div class="no-events">
-                        <p>No confirmed economic events for this period</p>
-                        <small>Showing only confirmed release dates within next 30 days</small>
+                        <p>No confirmed economic releases for this period</p>
+                        <small>Dates sourced directly from Federal Reserve</small>
                     </div>
                 `;
                 return;
@@ -213,7 +365,7 @@ class CalendarService {
             // Group events by date
             const grouped = {};
             events.forEach(event => {
-                const dateKey = event.date;
+                const dateKey = event.date.toDateString();
                 if (!grouped[dateKey]) {
                     grouped[dateKey] = [];
                 }
@@ -232,41 +384,30 @@ class CalendarService {
                 const isPast = date < today;
 
                 html += `
-                    <div class="event-date ${isPast ? 'past' : ''}">
+                    <div class="calendar-date ${isToday ? 'today' : ''} ${isPast ? 'past' : ''}">
                         <div class="date-header">
-                            <span>${this.formatDateLabel(date)}</span>
+                            <span class="date-label">${this.formatDateLabel(date)}</span>
                             ${isToday ? '<span class="today-badge">TODAY</span>' : ''}
                         </div>
-                        <div class="date-events">
                 `;
 
                 grouped[dateStr].forEach(event => {
-                    const hasData = event.current || event.previous;
-                    const isConfirmed = event.confirmed;
-                    const isReleased = event.lastUpdate && new Date(event.lastUpdate) >= date;
+                    const dataValues = this.formatDataValues(event.seriesId, dashboardData);
 
                     html += `
-                        <div class="event-item impact-${event.impact} ${isReleased ? 'released' : ''} ${!isConfirmed ? 'estimated' : ''}">
-                            <span class="event-time">${this.formatTime(event.time || '08:30')}</span>
-                            <span class="event-name">
-                                ${event.name}
-                                ${!isConfirmed ? '<span class="est-badge">EST</span>' : ''}
-                            </span>
-                            ${hasData ? `
-                                <span class="event-data">
-                                    ${event.previous ? `Prev: ${event.previous}` : ''}
-                                    ${event.current && isReleased ? ` | Actual: ${event.current}` : ''}
-                                </span>
-                            ` : ''}
-                            <span class="event-impact ${event.impact}">${event.impact.toUpperCase()}</span>
+                        <div class="calendar-item impact-${event.impact} ${event.isPast ? 'past' : ''}">
+                            ${event.isPast ? '<span class="calendar-checkmark">✓</span>' : ''}
+                            <div class="calendar-event">
+                                <span class="calendar-time">${event.time}</span>
+                                <span class="event-name">${event.name}</span>
+                                <span class="calendar-impact ${event.impact}">${event.impact.toUpperCase()}</span>
+                            </div>
+                            ${dataValues}
                         </div>
                     `;
                 });
 
-                html += `
-                        </div>
-                    </div>
-                `;
+                html += '</div>';
             });
 
             html += '</div>';
@@ -274,96 +415,28 @@ class CalendarService {
             // Add disclaimer
             html += `
                 <div class="calendar-disclaimer">
-                    <small>📅 Confirmed dates from official sources. EST = Estimated based on patterns.</small>
+                    <small>📅 Release dates from Federal Reserve Economic Data (FRED) API</small>
                 </div>
             `;
 
             this.container.innerHTML = html;
-            console.log('Calendar rendered successfully with', events.length, 'events');
+            console.log('✅ Calendar rendered successfully with', events.length, 'events');
 
         } catch (error) {
             console.error('Error rendering calendar:', error);
             this.container.innerHTML = `
-                <div class="no-events">
-                    <p>Error loading calendar events</p>
+                <div class="calendar-error">
+                    <p>Unable to load release calendar</p>
+                    <small>Please check your connection and try again</small>
                 </div>
             `;
         }
-    }
-
-    // Get events for selected period
-    getEventsForPeriod() {
-        const today = new Date();
-        const currentDay = today.getDay(); // 0 = Sunday
-
-        let startDate = new Date(today);
-        let endDate = new Date(today);
-
-        // Calculate date ranges - limited to 30 days max
-        switch(this.selectedPeriod) {
-            case 'today':
-                startDate.setHours(0, 0, 0, 0);
-                endDate.setHours(23, 59, 59, 999);
-                break;
-
-            case 'this-week':
-                // Start from Sunday of current week
-                const daysToSubtract = currentDay;
-                startDate.setDate(today.getDate() - daysToSubtract);
-                startDate.setHours(0, 0, 0, 0);
-                // End on Saturday
-                endDate = new Date(startDate);
-                endDate.setDate(startDate.getDate() + 6);
-                endDate.setHours(23, 59, 59, 999);
-                break;
-
-            case 'next-week':
-                // Start from next Sunday
-                const daysToNextSunday = 7 - currentDay;
-                startDate.setDate(today.getDate() + daysToNextSunday);
-                startDate.setHours(0, 0, 0, 0);
-                // End on next Saturday
-                endDate = new Date(startDate);
-                endDate.setDate(startDate.getDate() + 6);
-                endDate.setHours(23, 59, 59, 999);
-                break;
-
-            case 'month-ahead':
-                startDate = new Date(today);
-                startDate.setHours(0, 0, 0, 0);
-                endDate = new Date(today);
-                endDate.setDate(today.getDate() + 30);
-                endDate.setHours(23, 59, 59, 999);
-                break;
-        }
-
-        console.log('Date range:', startDate.toLocaleDateString(), 'to', endDate.toLocaleDateString());
-
-        // Filter calendar events for the selected period
-        return this.calendarEvents
-            .filter(event => {
-                const eventDate = new Date(event.date);
-                return eventDate >= startDate && eventDate <= endDate;
-            })
-            .sort((a, b) => new Date(a.date) - new Date(b.date));
     }
 
     // Format date label
     formatDateLabel(date) {
         const options = { weekday: 'long', month: 'long', day: 'numeric' };
         return date.toLocaleDateString('en-US', options);
-    }
-
-    // Format time
-    formatTime(timeStr) {
-        if (!timeStr) return '8:30 AM ET';
-
-        const [hours, minutes] = timeStr.split(':');
-        const hour = parseInt(hours);
-        const ampm = hour >= 12 ? 'PM' : 'AM';
-        const displayHour = hour > 12 ? hour - 12 : (hour === 0 ? 12 : hour);
-
-        return `${displayHour}:${minutes} ${ampm} ET`;
     }
 }
 
