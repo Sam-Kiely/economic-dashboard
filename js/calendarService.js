@@ -87,18 +87,16 @@ class CalendarService {
 
             const formatDate = (d) => d.toISOString().split('T')[0];
 
-            const url = `https://api.stlouisfed.org/fred/releases/dates?` +
-                `api_key=${API_CONFIG.FRED.apiKey}` +
-                `&file_type=json` +
-                `&include_release_dates_with_no_data=true` +
-                `&realtime_start=${formatDate(monthAgo)}` +
+            const url = `/api/fred-releases-dates?` +
+                `realtime_start=${formatDate(monthAgo)}` +
                 `&realtime_end=9999-12-31` +
                 `&sort_order=asc` +
+                `&include_release_dates_with_no_data=true` +
                 `&limit=1000`;
 
             console.log('FRED releases URL:', url);
 
-            // FRED supports CORS natively - no proxy needed
+            // Route through Vercel proxy to avoid CORS issues
             const response = await fetch(url);
 
             if (!response.ok) {

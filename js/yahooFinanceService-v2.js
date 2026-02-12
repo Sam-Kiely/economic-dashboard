@@ -218,16 +218,91 @@ class YahooFinanceService {
         return returns;
     }
 
-    // Get extended returns
+    // Get extended returns with date-based calculations for all periods including 3Y/5Y
     async getExtendedReturns(symbol) {
         try {
             const data = await this.getHistoricalData(symbol, '5y', '1d', false);
 
-            if (!data || !data.prices || data.prices.length === 0) {
+            if (!data || !data.prices || data.prices.length === 0 || !data.dates || data.dates.length === 0) {
                 return {};
             }
 
-            return this.calculatePeriodReturns(data.prices);
+            const prices = data.prices;
+            const dates = data.dates;
+            const currentPrice = prices[prices.length - 1];
+            const currentDate = this.parseDate(dates[dates.length - 1]);
+
+            if (!currentDate || !currentPrice) return {};
+
+            const returns = {};
+
+            // Find the price closest to a target date
+            const findPriceNearDate = (targetDate) => {
+                let closestIndex = -1;
+                let closestDiff = Infinity;
+                const targetTime = targetDate.getTime();
+
+                for (let i = 0; i < dates.length; i++) {
+                    const date = this.parseDate(dates[i]);
+                    if (!date) continue;
+                    const diff = Math.abs(date.getTime() - targetTime);
+                    if (diff < closestDiff) {
+                        closestDiff = diff;
+                        closestIndex = i;
+                    }
+                }
+
+                return closestIndex >= 0 ? prices[closestIndex] : null;
+            };
+
+            // 1 Week
+            const oneWeekAgo = new Date(currentDate);
+            oneWeekAgo.setDate(oneWeekAgo.getDate() - 7);
+            const weekPrice = findPriceNearDate(oneWeekAgo);
+            if (weekPrice) {
+                returns['1W'] = ((currentPrice - weekPrice) / weekPrice) * 100;
+            }
+
+            // 1 Month
+            const oneMonthAgo = new Date(currentDate);
+            oneMonthAgo.setMonth(oneMonthAgo.getMonth() - 1);
+            const monthPrice = findPriceNearDate(oneMonthAgo);
+            if (monthPrice) {
+                returns['1M'] = ((currentPrice - monthPrice) / monthPrice) * 100;
+            }
+
+            // YTD
+            const yearStart = new Date(currentDate.getFullYear(), 0, 1);
+            const ytdPrice = findPriceNearDate(yearStart);
+            if (ytdPrice) {
+                returns['YTD'] = ((currentPrice - ytdPrice) / ytdPrice) * 100;
+            }
+
+            // 1 Year
+            const oneYearAgo = new Date(currentDate);
+            oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+            const yearPrice = findPriceNearDate(oneYearAgo);
+            if (yearPrice) {
+                returns['1Y'] = ((currentPrice - yearPrice) / yearPrice) * 100;
+            }
+
+            // 3 Year
+            const threeYearsAgo = new Date(currentDate);
+            threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+            const threeYearPrice = findPriceNearDate(threeYearsAgo);
+            if (threeYearPrice) {
+                returns['3Y'] = ((currentPrice - threeYearPrice) / threeYearPrice) * 100;
+            }
+
+            // 5 Year
+            const fiveYearsAgo = new Date(currentDate);
+            fiveYearsAgo.setFullYear(fiveYearsAgo.getFullYear() - 5);
+            const fiveYearPrice = findPriceNearDate(fiveYearsAgo);
+            if (fiveYearPrice) {
+                returns['5Y'] = ((currentPrice - fiveYearPrice) / fiveYearPrice) * 100;
+            }
+
+            return returns;
         } catch (error) {
             console.error(`Error calculating extended returns for ${symbol}:`, error);
             return {};
@@ -372,6 +447,40 @@ class YahooFinanceService {
             '^VIX': 'vix-chart'
         };
         return keyMap[symbol] || `${symbol.toLowerCase()}-chart`;
+    }
+
+    // Parse date from various formats (M/D/YYYY, YYYY-MM-DD, timestamps)
+    parseDate(dateValue) {
+        if (!dateValue) return null;
+
+        if (dateValue instanceof Date) {
+            return dateValue;
+        }
+
+        if (typeof dateValue === 'string') {
+            if (dateValue.includes('/')) {
+                const parts = dateValue.split('/');
+                if (parts.length === 3) {
+                    const month = parseInt(parts[0]) - 1;
+                    const day = parseInt(parts[1]);
+                    const year = parseInt(parts[2]);
+                    return new Date(year, month, day);
+                }
+            } else if (dateValue.includes('-')) {
+                return new Date(dateValue + 'T00:00:00');
+            }
+            return new Date(dateValue);
+        }
+
+        if (typeof dateValue === 'number' && dateValue < 10000000000) {
+            return new Date(dateValue * 1000);
+        }
+
+        if (typeof dateValue === 'number') {
+            return new Date(dateValue);
+        }
+
+        return null;
     }
 
     // Test connection
