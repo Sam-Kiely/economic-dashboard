@@ -27,6 +27,22 @@ class CalendarService {
         398: { seriesId: 'fomc',             name: 'FOMC Rate Decision',       impact: 'high',   time: '2:00 PM ET' }
     };
 
+    // Series ID to chart canvas ID mapping (matches actual DOM IDs)
+    SERIES_TO_CHART = {
+        'coreCPI': 'corecpi-chart',
+        'corePPI': 'coreppi-chart',
+        'corePCE': 'corepce-chart',
+        'gdp': 'gdp-chart',
+        'tradeDeficit': 'trade-chart',
+        'unemployment': 'unemployment-chart',
+        'joblessClaims': 'jobless-chart',
+        'retailSales': 'retail-chart',
+        'durableGoods': 'durablegoods-chart',
+        'newHomeSales': 'newhomes-chart',
+        'existingHomeSales': 'existinghomes-chart',
+        'consumerSentiment': 'sentiment-chart'
+    };
+
     // Initialize the calendar
     async init(containerId) {
         console.log('Initializing FRED calendar with container:', containerId);
@@ -41,29 +57,29 @@ class CalendarService {
         this.setupPeriodSelector();
 
         // Wait for charts to load, then render
-        const maxWait = 30000; // 30 seconds max
-        const checkInterval = 500; // Check every 500ms
+        const maxWait = 30000;
+        const checkInterval = 500;
         let elapsed = 0;
 
         const waitForCharts = async () => {
             while (elapsed < maxWait) {
                 const chartExists = document.querySelector('.chart-container canvas');
                 if (chartExists) {
-                    console.log('✅ Charts detected, rendering calendar');
+                    console.log('Charts detected, rendering calendar');
                     await this.renderCalendar();
                     return;
                 }
                 await new Promise(resolve => setTimeout(resolve, checkInterval));
                 elapsed += checkInterval;
             }
-            console.warn('⚠️ Charts not detected after 30s, rendering calendar anyway');
+            console.warn('Charts not detected after 30s, rendering calendar anyway');
             await this.renderCalendar();
         };
 
         waitForCharts();
 
         // Set up refresh interval
-        setInterval(() => this.refresh(), 300000); // Refresh every 5 minutes
+        setInterval(() => this.refresh(), 300000);
 
         return true;
     }
@@ -72,9 +88,7 @@ class CalendarService {
     async fetchFREDReleaseDates() {
         const now = Date.now();
 
-        // Return cached data if still valid
         if (this.fredReleaseCache && (now - this.cacheTimestamp) < this.cacheTimeout) {
-            console.log('Using cached FRED release data');
             return this.fredReleaseCache;
         }
 
@@ -94,9 +108,6 @@ class CalendarService {
                 `&include_release_dates_with_no_data=true` +
                 `&limit=1000`;
 
-            console.log('FRED releases URL:', url);
-
-            // Route through Vercel proxy to avoid CORS issues
             const response = await fetch(url);
 
             if (!response.ok) {
@@ -104,18 +115,15 @@ class CalendarService {
             }
 
             const data = await response.json();
-            console.log('FRED releases response:', data);
 
             this.fredReleaseCache = data.release_dates || [];
             this.cacheTimestamp = now;
 
-            console.log(`✅ Cached ${this.fredReleaseCache.length} FRED release dates`);
+            console.log(`Cached ${this.fredReleaseCache.length} FRED release dates`);
             return this.fredReleaseCache;
 
         } catch (error) {
             console.error('Error fetching FRED release dates:', error);
-
-            // Don't fall back to estimates - show error instead
             this.fredReleaseCache = null;
             throw error;
         }
@@ -128,14 +136,13 @@ class CalendarService {
             const today = new Date();
             today.setHours(0, 0, 0, 0);
 
-            // Calculate period boundaries
             const { periodStart, periodEnd } = this.getPeriodBoundaries(today);
 
             const events = [];
 
             releaseDates.forEach(release => {
                 const mapping = this.RELEASE_ID_TO_SERIES[release.release_id];
-                if (!mapping) return; // Skip releases we don't track
+                if (!mapping) return;
 
                 const releaseDate = new Date(release.date + 'T00:00:00');
 
@@ -147,14 +154,14 @@ class CalendarService {
                         seriesId: mapping.seriesId,
                         time: mapping.time,
                         isPast: releaseDate < today,
-                        releaseName: release.release_name, // Keep FRED's official name
+                        releaseName: release.release_name,
                         releaseId: release.release_id
                     });
                 }
             });
 
             events.sort((a, b) => a.date - b.date);
-            console.log(`📅 Found ${events.length} releases for ${this.selectedPeriod}:`, events);
+            console.log(`Found ${events.length} releases for ${this.selectedPeriod}`);
             return events;
 
         } catch (error) {
@@ -165,7 +172,7 @@ class CalendarService {
 
     // Get period boundaries for filtering
     getPeriodBoundaries(today) {
-        const currentDay = today.getDay(); // 0 = Sunday
+        const currentDay = today.getDay();
         let periodStart = new Date(today);
         let periodEnd = new Date(today);
 
@@ -176,22 +183,18 @@ class CalendarService {
                 break;
 
             case 'this-week':
-                // Start from Sunday of current week
                 const daysToSubtract = currentDay;
                 periodStart.setDate(today.getDate() - daysToSubtract);
                 periodStart.setHours(0, 0, 0, 0);
-                // End on Saturday
                 periodEnd = new Date(periodStart);
                 periodEnd.setDate(periodStart.getDate() + 6);
                 periodEnd.setHours(23, 59, 59, 999);
                 break;
 
             case 'next-week':
-                // Start from next Sunday
                 const daysToNextSunday = 7 - currentDay;
                 periodStart.setDate(today.getDate() + daysToNextSunday);
                 periodStart.setHours(0, 0, 0, 0);
-                // End on next Saturday
                 periodEnd = new Date(periodStart);
                 periodEnd.setDate(periodStart.getDate() + 6);
                 periodEnd.setHours(23, 59, 59, 999);
@@ -209,59 +212,50 @@ class CalendarService {
         return { periodStart, periodEnd };
     }
 
-    // Load current data from dashboard charts
+    // Load current and previous values from dashboard charts
     loadCurrentData() {
         const data = {};
 
-        const seriesMap = {
-            'coreCPI': '#cpi-chart',
-            'corePPI': '#ppi-chart',
-            'corePCE': '#pce-chart',
-            'gdp': '#gdp-chart',
-            'tradeDeficit': '#tradedeficit-chart',
-            'unemployment': '#unemployment-chart',
-            'joblessClaims': '#jobless-chart',
-            'retailSales': '#retail-chart',
-            'durableGoods': '#durablegoods-chart',
-            'newHomeSales': '#newhomes-chart',
-            'existingHomeSales': '#existinghomes-chart',
-            'consumerSentiment': '#sentiment-chart'
-        };
+        for (const [seriesId, chartId] of Object.entries(this.SERIES_TO_CHART)) {
+            const chartCanvas = document.getElementById(chartId);
+            if (!chartCanvas) continue;
 
-        for (const [seriesId, selector] of Object.entries(seriesMap)) {
-            const card = document.querySelector(selector);
-            if (card) {
-                // Get current value
-                const currentElement = card.querySelector('.metric-value');
-                const current = currentElement ? currentElement.textContent.trim() : null;
+            const card = chartCanvas.closest('.card');
+            if (!card) continue;
 
-                // Get previous value from chart data
-                let previous = null;
-                const chartCanvas = card.querySelector('canvas');
-                if (chartCanvas && window.Chart && window.Chart.getChart) {
-                    const chart = window.Chart.getChart(chartCanvas);
-                    if (chart && chart.data && chart.data.datasets[0]) {
-                        const chartData = chart.data.datasets[0].data;
-                        if (chartData && chartData.length >= 2) {
-                            const prevValue = chartData[chartData.length - 2];
-                            previous = this.formatValue(prevValue, seriesId);
-                        }
+            // Get current value from the card display
+            const valueElement = card.querySelector('.card-value');
+            const current = valueElement ? valueElement.textContent.trim() : null;
+
+            // Get current and previous from Chart.js data
+            let previous = null;
+            let currentFromChart = null;
+            const chart = chartCanvas.chart || (window.Chart && window.Chart.getChart && window.Chart.getChart(chartCanvas));
+            if (chart && chart.data && chart.data.datasets && chart.data.datasets[0]) {
+                const chartData = chart.data.datasets[0].data;
+                if (chartData && chartData.length >= 2) {
+                    const prevValue = chartData[chartData.length - 2];
+                    previous = this.formatValue(prevValue, seriesId);
+                    if (!current || current === '--') {
+                        const curValue = chartData[chartData.length - 1];
+                        currentFromChart = this.formatValue(curValue, seriesId);
                     }
                 }
+            }
 
-                if (current || previous) {
-                    data[seriesId] = { current, previous };
-                }
+            const displayCurrent = (current && current !== '--') ? current : currentFromChart;
+            if (displayCurrent || previous) {
+                data[seriesId] = { current: displayCurrent, previous };
             }
         }
 
-        console.log('Loaded dashboard data:', data);
+        console.log('Loaded dashboard data:', Object.keys(data).length, 'series');
         return data;
     }
 
     // Format value based on series type
     formatValue(value, seriesId) {
-        if (typeof value !== 'number') return value;
+        if (value == null || typeof value !== 'number' || isNaN(value)) return null;
 
         switch(seriesId) {
             case 'unemployment':
@@ -288,26 +282,6 @@ class CalendarService {
         }
     }
 
-    // Format data values for display
-    formatDataValues(seriesId, dashboardData) {
-        const data = dashboardData[seriesId];
-        if (!data) return '';
-
-        let html = '<div class="calendar-data-values">';
-
-        if (data.current) {
-            html += `<span class="data-label">Current:</span> <span class="data-value">${data.current}</span>`;
-        }
-
-        if (data.previous) {
-            if (data.current) html += '<span class="data-separator"> | </span>';
-            html += `<span class="data-label">Previous:</span> <span class="data-value">${data.previous}</span>`;
-        }
-
-        html += '</div>';
-        return html;
-    }
-
     // Setup period selector
     setupPeriodSelector() {
         const selector = document.querySelector('.period-selector');
@@ -322,7 +296,6 @@ class CalendarService {
                 buttons.forEach(b => b.classList.remove('active'));
                 e.target.classList.add('active');
                 this.selectedPeriod = e.target.dataset.period;
-                console.log('Period changed to:', this.selectedPeriod);
                 await this.renderCalendar();
             });
         });
@@ -330,21 +303,14 @@ class CalendarService {
 
     // Refresh the calendar
     async refresh() {
-        console.log('Refreshing calendar...');
         await this.renderCalendar();
     }
 
     // Render the calendar
     async renderCalendar() {
-        if (!this.container || !this.initialized) {
-            console.log('Cannot render - container not initialized');
-            return;
-        }
-
-        console.log('Rendering calendar for period:', this.selectedPeriod);
+        if (!this.container || !this.initialized) return;
 
         try {
-            // Show loading state
             this.container.innerHTML = '<div class="calendar-loading">Loading release dates...</div>';
 
             const events = await this.calculateUpcomingReleases();
@@ -354,7 +320,7 @@ class CalendarService {
                 this.container.innerHTML = `
                     <div class="no-events">
                         <p>No confirmed economic releases for this period</p>
-                        <small>Dates sourced directly from Federal Reserve</small>
+                        <small>Dates sourced from Federal Reserve Economic Data</small>
                     </div>
                 `;
                 return;
@@ -364,61 +330,72 @@ class CalendarService {
             const grouped = {};
             events.forEach(event => {
                 const dateKey = event.date.toDateString();
-                if (!grouped[dateKey]) {
-                    grouped[dateKey] = [];
-                }
+                if (!grouped[dateKey]) grouped[dateKey] = [];
                 grouped[dateKey].push(event);
             });
 
-            // Build HTML
-            let html = '<div class="calendar-events">';
-
             const today = new Date();
             today.setHours(0, 0, 0, 0);
+
+            let html = '<div class="calendar-events">';
 
             Object.keys(grouped).forEach(dateStr => {
                 const date = new Date(dateStr);
                 const isToday = date.toDateString() === today.toDateString();
                 const isPast = date < today;
 
-                html += `
-                    <div class="calendar-date ${isToday ? 'today' : ''} ${isPast ? 'past' : ''}">
-                        <div class="date-header">
-                            <span class="date-label">${this.formatDateLabel(date)}</span>
-                            ${isToday ? '<span class="today-badge">TODAY</span>' : ''}
-                        </div>
-                `;
+                html += `<div class="calendar-day ${isToday ? 'is-today' : ''} ${isPast ? 'is-past' : ''}">`;
+                html += `<div class="day-header">`;
+                html += `<span class="day-label">${this.formatDateLabel(date)}</span>`;
+                if (isToday) html += `<span class="today-badge">TODAY</span>`;
+                html += `</div>`;
+                html += `<div class="day-events">`;
 
                 grouped[dateStr].forEach(event => {
-                    const dataValues = this.formatDataValues(event.seriesId, dashboardData);
+                    const eventData = dashboardData[event.seriesId];
+                    const hasBothValues = eventData && eventData.current && eventData.previous;
 
-                    html += `
-                        <div class="calendar-item impact-${event.impact} ${event.isPast ? 'past' : ''}">
-                            ${event.isPast ? '<span class="calendar-checkmark">✓</span>' : ''}
-                            <div class="calendar-event">
-                                <span class="calendar-time">${event.time}</span>
-                                <span class="event-name">${event.name}</span>
-                                <span class="calendar-impact ${event.impact}">${event.impact.toUpperCase()}</span>
-                            </div>
-                            ${dataValues}
-                        </div>
-                    `;
+                    html += `<div class="cal-event impact-border-${event.impact}">`;
+                    html += `<div class="cal-event-row">`;
+
+                    // Time
+                    html += `<span class="cal-time">${event.time}</span>`;
+
+                    // Name + impact
+                    html += `<span class="cal-name">${event.name}</span>`;
+                    html += `<span class="cal-impact impact-${event.impact}">${event.impact.toUpperCase()}</span>`;
+
+                    // Data values inline
+                    if (hasBothValues) {
+                        html += `<div class="cal-metrics">`;
+                        html += `<span class="cal-metric"><span class="cal-metric-label">Latest:</span> <span class="cal-metric-value">${eventData.current}</span></span>`;
+                        html += `<span class="cal-metric"><span class="cal-metric-label">Prior:</span> <span class="cal-metric-value">${eventData.previous}</span></span>`;
+                        html += `</div>`;
+                    } else if (eventData && eventData.current) {
+                        html += `<div class="cal-metrics">`;
+                        html += `<span class="cal-metric"><span class="cal-metric-label">Latest:</span> <span class="cal-metric-value">${eventData.current}</span></span>`;
+                        html += `</div>`;
+                    }
+
+                    // Checkmark for past events
+                    if (event.isPast) {
+                        html += `<span class="cal-released">Released</span>`;
+                    }
+
+                    html += `</div>`; // cal-event-row
+                    html += `</div>`; // cal-event
                 });
 
-                html += '</div>';
+                html += `</div>`; // day-events
+                html += `</div>`; // calendar-day
             });
 
             html += '</div>';
 
-            // Add disclaimer
-            html += `
-                <div class="calendar-disclaimer">
-                    <small>📅 Release dates from Federal Reserve Economic Data (FRED) API</small>
-                </div>
-            `;
+            html += `<div class="calendar-footer"><small>Release dates from FRED API</small></div>`;
 
             this.container.innerHTML = html;
-            console.log('✅ Calendar rendered successfully with', events.length, 'events');
+            console.log('Calendar rendered with', events.length, 'events');
 
         } catch (error) {
             console.error('Error rendering calendar:', error);
@@ -433,7 +410,7 @@ class CalendarService {
 
     // Format date label
     formatDateLabel(date) {
-        const options = { weekday: 'long', month: 'long', day: 'numeric' };
+        const options = { weekday: 'short', month: 'short', day: 'numeric' };
         return date.toLocaleDateString('en-US', options);
     }
 }
