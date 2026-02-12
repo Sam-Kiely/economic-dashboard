@@ -735,13 +735,28 @@ class APIService {
                 const current = joblessData.values[joblessData.values.length - 1];
                 const previous = joblessData.values[joblessData.values.length - 2];
 
+                // Show ~1 label per month for 52 weekly data points
+                const joblessDates = joblessData.dates;
+                const joblessLabels = [];
+                let lastLabelMonth = -1;
+                for (let i = 0; i < joblessDates.length; i++) {
+                    const parts = joblessDates[i].split('-');
+                    const month = parseInt(parts[1]);
+                    if (month !== lastLabelMonth) {
+                        joblessLabels.push(this.formatDate(joblessDates[i]));
+                        lastLabelMonth = month;
+                    } else {
+                        joblessLabels.push('');
+                    }
+                }
+
                 updates['jobless-chart'] = {
                     current: current / 1000,
                     change: (current - previous) / 1000,
                     changeType: current < previous ? 'positive' : 'negative',
                     changeLabel: 'WoW',
                     historicalData: joblessData.values.map(v => v / 1000),
-                    dates: joblessData.dates.map(d => this.formatDate(d, true, false)),
+                    dates: joblessLabels,
                     observationDate: joblessData.dates[joblessData.dates.length - 1],
                     seriesId: 'joblessClaims'
                 };

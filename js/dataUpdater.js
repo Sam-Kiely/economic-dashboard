@@ -409,7 +409,7 @@ class DataUpdater {
     formatNextRelease(date) {
         if (!date) return '';
         const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        return `Next: ${months[date.getMonth()]} ${date.getDate()}`;
+        return `Next release: ${months[date.getMonth()]} ${date.getDate()}`;
     }
 
     // Update a specific card with new data
